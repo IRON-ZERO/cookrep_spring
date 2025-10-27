@@ -24,19 +24,14 @@ repositories {
 	mavenCentral()
 }
 
-ext {
-  querydslVersion = "5.0.0"
-}
 
 dependencies {
   // spring
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	// queryDSL
-	implementation "com.querydsl:querydsl-jpa:$querydslVersion:jakarta"
-	annotationProcessor "com.querydsl:querydsl-apt:$querydslVersion:jakarta"
 	// lombok
 	annotationProcessor 'org.projectlombok:lombok'
 	compileOnly 'org.projectlombok:lombok'
@@ -50,6 +45,7 @@ dependencies {
 	// test
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.5'
 }
 
 tasks.named('test') {
@@ -57,20 +53,3 @@ tasks.named('test') {
 }
 
 
-def querydslDir = file("src/main/generated")
- 
-sourceSets {
-    main {
-      java{
-        srcDirs = ['src/main/java',querydslDir]
-      }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
-}
-
-clean.doLast {
-    file(querydslDir).deleteDir()
-}
