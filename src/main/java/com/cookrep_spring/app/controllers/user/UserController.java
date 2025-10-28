@@ -3,15 +3,11 @@ package com.cookrep_spring.app.controllers.user;
 import com.cookrep_spring.app.dto.user.request.UserUpdateRequest;
 import com.cookrep_spring.app.dto.user.response.UserDetailResponse;
 import com.cookrep_spring.app.dto.user.response.UserUpdateResponse;
-import com.cookrep_spring.app.models.user.User;
 import com.cookrep_spring.app.services.user.UserService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
