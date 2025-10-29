@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class Recipe {
 
     @Id
@@ -26,9 +26,6 @@ public class Recipe {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(referencedColumnName = "userId")
     private User user;     // 작성자 ID (User FK)
-
-//    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<RecipeSteps> steps;
 
     @Column(length = 100, nullable = false)
     private String title;       // 레시피 제목

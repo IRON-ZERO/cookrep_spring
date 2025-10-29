@@ -3,5 +3,9 @@ package com.cookrep_spring.app.repositories.recipe;
 import com.cookrep_spring.app.models.RecipeSteps;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RecipeStepsRepository extends JpaRepository<RecipeSteps, Long> {
+import java.util.List;
+
+public interface RecipeStepsRepository extends JpaRepository<RecipeSteps, Integer> {
+    List<RecipeSteps> findByRecipe_RecipeIdOrderByStepOrderAsc(String recipeId);
+
 }

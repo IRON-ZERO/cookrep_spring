@@ -7,6 +7,7 @@ import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeStepsRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
 import dto.recipe.request.RecipePostRequest;
+import dto.recipe.response.RecipeDetailResponse;
 import dto.recipe.response.RecipeUpdateResponse;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private final RecipeStepsRepository recipeStepsRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public RecipeUpdateResponse saveRecipe(String userId, RecipePostRequest dto) {
@@ -59,5 +61,58 @@ public class RecipeService {
                 .toBuilder()
                 .status("success")
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public RecipeDetailResponse getRecipeDetail(String recipeId){
+        // 1. 레시피 조회
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(()-> new RuntimeException("Recipe not Found"));
+
+        // 2. Ingredients 문자열 리스트 (예: ingredient.getName())
+//        List<String> ingredients = recipe.getIngredients() != null ?
+//                recipe.getIngredients().stream()
+//                        .map(ingredient -> ingredient.getName())
+//                        .collect(Collectors.toList()) : List.of();
+
+        // 메인 이미지 Presigned URL 생성
+        String thumbnailKey = recipe.getThumbnailImageUrl();
+        String thumbnailUrl = null;
+        if (thumbnailKey != null && !thumbnailKey.isEmpty()) {
+            thumbnailUrl = s3Service.generatePresignedUrls(List.of(thumbnailKey))
+                    .get(0)
+                    .get("uploadUrl");
+        }
+
+        // 2. Step 조회
+        List<RecipeSteps> steps = recipeStepsRepository.findByRecipe_RecipeIdOrderByStepOrderAsc(recipeId);
+
+
+        // 3. Step 내용 + Presigned URL 적용
+        List<String> stepDescriptions = steps.stream()
+                .map(step -> {
+                    String imageUrl = step.getImageUrl();
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        // S3Service에서 presigned URL 생성
+                        imageUrl = s3Service.generatePresignedUrls(List.of(imageUrl))
+                                .get(0)
+                                .get("uploadUrl");
+                    }
+                    return step.getStepOrder() + ". " + step.getContents() +
+                            (imageUrl != null ? " (이미지: " + imageUrl + ")" : "");
+                })
+                .collect(Collectors.toList());
+
+
+        // 4. 작성자 닉네임
+        String authorNickname = recipe.getUser() != null ? recipe.getUser().getNickname() : "unknown";
+
+        // 5. DTO 변환
+        return RecipeDetailResponse.from(
+                recipe.toBuilder().thumbnailImageUrl(thumbnailUrl).build(),
+                List.of(), // Ingredients 현재 미구현
+                stepDescriptions,
+                authorNickname
+        );
     }
 }

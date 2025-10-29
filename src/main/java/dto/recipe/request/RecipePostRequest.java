@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RecipePostRequest {
     private String title;
     private String thumbnailImageUrl;

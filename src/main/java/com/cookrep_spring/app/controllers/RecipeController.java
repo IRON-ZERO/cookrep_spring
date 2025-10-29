@@ -3,6 +3,7 @@ package com.cookrep_spring.app.controllers;
 import com.cookrep_spring.app.services.RecipeService;
 import com.cookrep_spring.app.services.S3Service;
 import dto.recipe.request.RecipePostRequest;
+import dto.recipe.response.RecipeDetailResponse;
 import dto.recipe.response.RecipeUpdateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class RecipeController {
     private final RecipeService recipeService;
     private final S3Service s3Service;
 
-    //=== upload ===
+    //================== upload =================
     //s3 서명된 url 생성 api
     @PostMapping("/presigned")
     public ResponseEntity<List<Map<String, String>>> getPresignedUrls(@RequestBody List<String> fileNames){
@@ -37,5 +38,13 @@ public class RecipeController {
     {
         RecipeUpdateResponse response = recipeService.saveRecipe(userId, request);
         return ResponseEntity.ok(response);
+    }
+
+    //================== detail =================
+    @GetMapping("/{recipeId}")
+    public ResponseEntity<RecipeDetailResponse> getRecipeDetail(@PathVariable String recipeId){
+        RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId);
+        return ResponseEntity.ok(response);
+
     }
 }
