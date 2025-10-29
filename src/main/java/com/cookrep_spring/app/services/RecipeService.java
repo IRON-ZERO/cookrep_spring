@@ -1,5 +1,6 @@
 package com.cookrep_spring.app.services;
 
+import com.cookrep_spring.app.config.AwsS3Config;
 import com.cookrep_spring.app.models.Recipe;
 import com.cookrep_spring.app.models.RecipeSteps;
 import com.cookrep_spring.app.models.user.User;
@@ -12,6 +13,8 @@ import dto.recipe.response.RecipeUpdateResponse;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +28,7 @@ public class RecipeService {
     private final RecipeStepsRepository recipeStepsRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private S3Client s3Client;
 
     @Transactional
     public RecipeUpdateResponse saveRecipe(String userId, RecipePostRequest dto) {
@@ -115,4 +119,40 @@ public class RecipeService {
                 authorNickname
         );
     }
+
+    @Transactional
+    public boolean deleteRecipe(String recipeId) {
+        // 1. 레시피 조회
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new RuntimeException("Recipe not Found"));
+
+        // 2. 단계별 이미지 조회
+        List<RecipeSteps> steps = recipeStepsRepository.findByRecipe_RecipeIdOrderByStepOrderAsc(recipeId);
+
+        try {
+            // 3. 메인 이미지 S3 삭제
+            if (recipe.getThumbnailImageUrl() != null && !recipe.getThumbnailImageUrl().isEmpty()) {
+                s3Service.deleteObject(recipe.getThumbnailImageUrl());
+            }
+
+            // 4. 단계별 이미지 S3 삭제
+            for (RecipeSteps step : steps) {
+                if (step.getImageUrl() != null && !step.getImageUrl().isEmpty()) {
+                    s3Service.deleteObject(step.getImageUrl());
+                }
+            }
+
+            // 5. DB에서 레시피 및 단계 삭제
+            recipeStepsRepository.deleteAll(steps);
+            recipeRepository.delete(recipe);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("레시피 삭제 실패: " + recipeId, e);
+        }
+    }
+
+
+
 }
