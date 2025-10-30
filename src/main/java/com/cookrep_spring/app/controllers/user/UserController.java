@@ -36,7 +36,7 @@ public class UserController {
         // userId에 해당하는 User가 있을 경우 삭제 후 true. 없다면 false 반환
         boolean deleted = userService.deleteById(userId);
 
-        if (deleted){
+        if (deleted) {
             return ResponseEntity.noContent().build();
         }else {
             return ResponseEntity.notFound().build();
