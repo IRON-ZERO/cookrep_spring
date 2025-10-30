@@ -1,11 +1,12 @@
 package com.cookrep_spring.app.controllers;
 
 import com.cookrep_spring.app.services.RecipeService;
-import com.cookrep_spring.app.services.S3Service;
+import com.cookrep_spring.app.utils.S3Service;
 import dto.recipe.request.RecipePostRequest;
 import dto.recipe.response.RecipeDetailResponse;
 import dto.recipe.response.RecipeUpdateResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,5 +47,17 @@ public class RecipeController {
         RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId);
         return ResponseEntity.ok(response);
 
+    }
+
+    //================== delete =================
+    @DeleteMapping("/{recipeId}")
+    public ResponseEntity<?> deleteRecipe(@PathVariable String recipeId) {
+        try {
+            recipeService.deleteRecipe(recipeId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }
