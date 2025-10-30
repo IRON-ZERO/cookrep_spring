@@ -1,4 +1,4 @@
-package dto.recipe.request;
+package com.cookrep_spring.app.dto.recipe.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

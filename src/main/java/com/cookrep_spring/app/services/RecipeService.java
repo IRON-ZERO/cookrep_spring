@@ -7,20 +7,21 @@ import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeStepsRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
 import com.cookrep_spring.app.utils.S3Service;
-import dto.recipe.request.RecipePostRequest;
-import dto.recipe.response.RecipeDetailResponse;
-import dto.recipe.response.RecipeUpdateResponse;
+import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
+import com.cookrep_spring.app.dto.recipe.response.RecipeDetailResponse;
+import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
@@ -65,6 +66,74 @@ public class RecipeService {
                 .status("success")
                 .build();
     }
+
+    // s3이미지 삭제 ->
+    @Transactional
+    public RecipeUpdateResponse updateRecipe(String recipeId, RecipePostRequest dto) {
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new RuntimeException("Recipe not Found"));
+
+        // 기존 Step 및 이미지 정보 가져오기
+        List<RecipeSteps> existingSteps = recipeStepsRepository.findByRecipe_RecipeIdOrderByStepOrderAsc(recipeId);
+
+        // DB 업데이트
+        recipe.setTitle(dto.getTitle());
+        recipe.setThumbnailImageUrl(dto.getThumbnailImageUrl());
+        recipe.setPeopleCount(dto.getPeopleCount());
+        recipe.setPrepTime(dto.getPrepTime());
+        recipe.setCookTime(dto.getCookTime());
+        recipeRepository.save(recipe);
+
+        // 기존 Step 삭제 후 새 Step 저장
+        recipeStepsRepository.deleteAll(existingSteps);
+
+        List<RecipeSteps> newSteps = dto.getSteps().stream()
+                .map(s -> RecipeSteps.builder()
+                        .stepOrder(s.getStepOrder())
+                        .contents(s.getContents())
+                        .imageUrl(s.getImageUrl())
+                        .recipe(recipe)
+                        .build())
+                .collect(Collectors.toList());
+        recipeStepsRepository.saveAll(newSteps);
+
+        // 삭제 대상 S3 URL 수집 (DB 업데이트 후 별도 처리)
+        List<String> deleteKeys = new ArrayList<>();
+
+        // 썸네일 변경 시
+        if (recipe.getThumbnailImageUrl() != null &&
+                !recipe.getThumbnailImageUrl().equals(dto.getThumbnailImageUrl())) {
+            deleteKeys.add(recipe.getThumbnailImageUrl());
+        }
+
+        // Step 이미지 중 새 Step에 없는 기존 이미지 삭제
+        Set<String> newStepImageUrls = newSteps.stream()
+                .map(RecipeSteps::getImageUrl)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        existingSteps.stream()
+                .map(RecipeSteps::getImageUrl)
+                .filter(Objects::nonNull)
+                .filter(url -> !newStepImageUrls.contains(url))
+                .forEach(deleteKeys::add);
+
+        // S3 삭제는 트랜잭션 밖에서 처리
+        deleteKeys.forEach(url -> {
+            try {
+                s3Service.deleteObject(url);
+            } catch (Exception e) {
+                // 로그만 남기고 예외는 무시 → DB와 S3 불일치 최소화
+                log.warn("S3 삭제 실패: " + url, e);
+            }
+        });
+
+        return RecipeUpdateResponse.from(recipe)
+                .toBuilder()
+                .status("success")
+                .build();
+    }
+
 
     @Transactional(readOnly = true)
     public RecipeDetailResponse getRecipeDetail(String recipeId){

@@ -1,4 +1,4 @@
-package dto.user.request;
+package com.cookrep_spring.app.dto.user.request;
 
 import lombok.Data;
 

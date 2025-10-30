@@ -2,9 +2,9 @@ package com.cookrep_spring.app.controllers;
 
 import com.cookrep_spring.app.services.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
-import dto.recipe.request.RecipePostRequest;
-import dto.recipe.response.RecipeDetailResponse;
-import dto.recipe.response.RecipeUpdateResponse;
+import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
+import com.cookrep_spring.app.dto.recipe.response.RecipeDetailResponse;
+import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,12 +32,22 @@ public class RecipeController {
     }
 
     // 클라이언트에서 s3 업로드 완료 후, db에 최종 업로드 api
-    @PostMapping("/register/{userId}")
+    @PostMapping("/{userId}")
     public ResponseEntity<RecipeUpdateResponse> registerRecipe(
             @PathVariable String userId,
             @RequestBody RecipePostRequest request)
     {
         RecipeUpdateResponse response = recipeService.saveRecipe(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    //================== update =================
+    @PutMapping("/{recipeId}")
+    public ResponseEntity<RecipeUpdateResponse> updateRecipe(
+            @PathVariable String recipeId,
+            @RequestBody RecipePostRequest request)
+    {
+        RecipeUpdateResponse response = recipeService.updateRecipe(recipeId, request);
         return ResponseEntity.ok(response);
     }
 

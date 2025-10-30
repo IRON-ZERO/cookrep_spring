@@ -1,4 +1,4 @@
-package dto.recipe.response;
+package com.cookrep_spring.app.dto.recipe.response;
 
 import com.cookrep_spring.app.models.Recipe;
 import lombok.Builder;
