@@ -67,6 +67,7 @@ public class UserIngredientService {
     }
 
     // 유저 냉장고에 재료 삭제
+    @Transactional
     public boolean deleteByUserIdAndIngredientId(String userId, int ingredientId){
         return userIngredientRepository
             .findByUser_UserIdAndIngredient_IngredientId(userId, ingredientId)
