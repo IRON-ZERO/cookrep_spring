@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "user")
+@Table(name = "User")
 @Data
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
@@ -16,6 +16,7 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+    @Column(nullable = false, unique = true)
     private String nickname;
     private String firstName;
     private String lastName;

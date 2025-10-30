@@ -3,7 +3,6 @@ package com.cookrep_spring.app.services.ingredient;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredientPK;
-import com.cookrep_spring.app.models.user.User;
 import com.cookrep_spring.app.repositories.ingredient.IngredientRepository;
 import com.cookrep_spring.app.repositories.ingredient.UserIngredientRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
@@ -11,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,33 +26,47 @@ public class UserIngredientService {
     // 추가된 Ingredient나 기존에 있다면 해당 Ingredient의 Id를 가져온다.
     @Transactional
     public List<Ingredient> addIngredients(String userId, String[] ingredientNames) {
-        // 재료들 각각의 for문
-        for (String ingredientName : ingredientNames) {
-            // [1] 재료 존재 여부 확인
-            Ingredient ingredient = ingredientRepository.findByName(ingredientName)
-                .orElseGet(() -> {
-                    Ingredient newIngredient = Ingredient.builder()
-                                                         .name(ingredientName)
-                                                         .build();
-                    return ingredientRepository.save(newIngredient);
-                });
-            // [2] 유저 냉장고에 있는지 확인
-            boolean exists = userIngredientRepository
-                .existsByUser_UserIdAndIngredient_IngredientId(userId, ingredient.getIngredientId());
-            if (exists) continue;
+        // 1️⃣ 이미 등록된 재료들 미리 조회
+        List<Ingredient> existingIngredients = ingredientRepository.findByNameIn(List.of(ingredientNames));
+        Set<String> existingNames = existingIngredients.stream()
+                                                       .map(Ingredient::getName)
+                                                       .collect(Collectors.toSet());
 
-            // [3] 관계 추가
-            User user = userRepository.getReferenceById(userId);
-            UserIngredientPK id = new UserIngredientPK(userId, ingredient.getIngredientId());
-            UserIngredient userIngredient = UserIngredient.builder()
-                .id(id)
-                .user(user)
-                .ingredient(ingredient)
-                .build();
+        // 2️⃣ DB에 없는 재료들만 새로 생성
+        List<Ingredient> newIngredients = Arrays.stream(ingredientNames)
+                                                .filter(name -> !existingNames.contains(name))
+                                                .map(name -> Ingredient.builder().name(name).build())
+                                                .toList();
+        ingredientRepository.saveAll(newIngredients);
 
-            userIngredientRepository.save(userIngredient);
-        }
-        return userIngredientRepository.findIngredientsByUser_UserId(userId);
+        // 3️⃣ 전체 재료 목록 = 기존 + 신규
+        List<Ingredient> allIngredients = new ArrayList<>();
+        allIngredients.addAll(existingIngredients);
+        allIngredients.addAll(newIngredients);
+
+        // 4️⃣ 유저 냉장고에 이미 등록된 재료 제외
+//        List<Integer> ingredientIds = allIngredients.stream()
+//                                                    .map(Ingredient::getIngredientId)
+//                                                    .toList();
+
+        List<Integer> alreadyHasIds = userIngredientRepository.findIngredientsByUser_UserId(userId)
+                                                              .stream()
+                                                              .map(Ingredient::getIngredientId)
+                                                              .toList();
+
+        List<UserIngredient> newUserIngredients = allIngredients.stream()
+                                                                .filter(i -> !alreadyHasIds.contains(i.getIngredientId()))
+                                                                .map(i -> UserIngredient.builder()
+                                                                                        .id(new UserIngredientPK(userId, i.getIngredientId()))
+                                                                                        .user(userRepository.getReferenceById(userId))
+                                                                                        .ingredient(i)
+                                                                                        .build())
+                                                                .toList();
+
+        userIngredientRepository.saveAll(newUserIngredients);
+
+        // 5️⃣ 결과 반환
+        return allIngredients;
     }
 
     // 유저 냉장고에 재료 삭제
@@ -75,4 +87,5 @@ public class UserIngredientService {
     }
 
     // (레시피 서비스로 옮겨야 함) 유저 냉장고의 재료로 레시피 검색
+
 }
