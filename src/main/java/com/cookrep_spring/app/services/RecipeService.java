@@ -134,7 +134,6 @@ public class RecipeService {
                 .build();
     }
 
-
     @Transactional(readOnly = true)
     public RecipeDetailResponse getRecipeDetail(String recipeId){
         // 1. 레시피 조회

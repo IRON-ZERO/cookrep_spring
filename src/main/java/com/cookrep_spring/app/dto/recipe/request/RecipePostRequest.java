@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class RecipePostRequest {
+    private String userId;
     private String title;
     private String thumbnailImageUrl;
     private int peopleCount;

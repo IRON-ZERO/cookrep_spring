@@ -24,7 +24,7 @@ public class Recipe {
     private String recipeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(referencedColumnName = "userId")
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
     private User user;     // 작성자 ID (User FK)
 
     @Column(length = 100, nullable = false)
