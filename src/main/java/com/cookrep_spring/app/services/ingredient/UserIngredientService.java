@@ -45,9 +45,6 @@ public class UserIngredientService {
         allIngredients.addAll(newIngredients);
 
         // 4️⃣ 유저 냉장고에 이미 등록된 재료 제외
-//        List<Integer> ingredientIds = allIngredients.stream()
-//                                                    .map(Ingredient::getIngredientId)
-//                                                    .toList();
 
         List<Integer> alreadyHasIds = userIngredientRepository.findIngredientsByUser_UserId(userId)
                                                               .stream()
