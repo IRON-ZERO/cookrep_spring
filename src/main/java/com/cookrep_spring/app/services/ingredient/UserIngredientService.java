@@ -83,6 +83,6 @@ public class UserIngredientService {
                                  .findIngredientsByUser_UserId(user.getUserId()));
     }
 
-    // (레시피 서비스로 옮겨야 함) 유저 냉장고의 재료로 레시피 검색
+    // TODO: 유저 냉장고의 재료로 레시피 검색 기능을 레시피 서비스로 이동
 
 }
