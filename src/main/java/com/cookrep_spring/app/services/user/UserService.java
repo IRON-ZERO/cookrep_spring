@@ -27,7 +27,7 @@ public class UserService {
 
                 // null 값이 아닌 것들만 업데이트
                 if(userInput.getFirstName() != null) user.setFirstName(userInput.getFirstName());
-                if(userInput.getLastName()!= null) user.setLastName(userInput.getLastName());
+                if(userInput.getLastName() != null) user.setLastName(userInput.getLastName());
                 if(userInput.getCountry() != null) user.setCountry(userInput.getCountry());
                 if(userInput.getCity() != null) user.setCity(userInput.getCity());
 
