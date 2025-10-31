@@ -1,11 +1,16 @@
 package com.cookrep_spring.app.services.ingredient;
 
+import com.cookrep_spring.app.dto.recipe.response.RecipeMatchDTO;
+import com.cookrep_spring.app.dto.recipe.response.RecipeResponseDTO;
+import com.cookrep_spring.app.models.Recipe;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredientPK;
 import com.cookrep_spring.app.repositories.ingredient.IngredientRepository;
+import com.cookrep_spring.app.repositories.ingredient.RecipeIngredientRepository;
 import com.cookrep_spring.app.repositories.ingredient.UserIngredientRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
+//import com.cookrep_spring.app.utils.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +24,8 @@ public class UserIngredientService {
     private final UserIngredientRepository userIngredientRepository;
     private final UserRepository userRepository;
     private final IngredientRepository ingredientRepository;
+    private final RecipeIngredientRepository recipeIngredientRepository;
+//    private final S3Service presigner;
 
     // 유저 냉장고에 재료 추가
     // 아래 조건에 맞추어 동시에 재료 테이블에도 추가됨.
@@ -85,5 +92,32 @@ public class UserIngredientService {
     }
 
     // TODO: 유저 냉장고의 재료로 레시피 검색 기능을 레시피 서비스로 이동
+    /**
+     * 냉장고 재료 기반 레시피 추천
+     * - key: RecipeResponseDTO
+     * - value: 일치 재료 수
+     */
+    public Map<RecipeResponseDTO, Integer> recommendWithMatchCount(List<String> ingredientNames) {
+        Map<RecipeResponseDTO, Integer> result = new LinkedHashMap<>();
+
+        if (ingredientNames == null || ingredientNames.isEmpty()) return result;
+
+        List<RecipeMatchDTO> queryResult = recipeIngredientRepository.findRecipesWithMatchCount(ingredientNames);
+
+        for (RecipeMatchDTO recipeDTO : queryResult) {
+            Recipe recipe = recipeDTO.getRecipe();
+            Long matchCount = recipeDTO.getMatchCount();
+
+            // Presigned URL 생성 (기존 JSP 로직 그대로)
+            String url = recipe.getThumbnailImageUrl();
+            if (url != null && !url.startsWith("https://")) {
+//                url = presigner.generatePresignedUrls(url);
+            }
+
+            RecipeResponseDTO dto = RecipeResponseDTO.of(recipe, url);
+            result.put(dto, matchCount.intValue());
+        }
+        return result;
+    }
 
 }
