@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.controllers.user;
 
-import com.cookrep_spring.app.dto.recipe.response.RecipeResponseDTO;
+import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
 import com.cookrep_spring.app.dto.user.request.UserUpdateRequest;
 import com.cookrep_spring.app.dto.user.response.UserDetailResponse;
 import com.cookrep_spring.app.dto.user.response.UserUpdateResponse;
@@ -80,9 +80,14 @@ public class UserController {
     // 유저가 검색하고 싶은 재료 Id들로 레시피 조회
     // 반환 빈 값 "" 가능. es6에서 ""는 falsy
     @PostMapping("/search-recipes")
-    public  ResponseEntity<Map<RecipeResponseDTO, Integer>> findRecipesByIngredientIds(@RequestBody List<Integer> ingredientIds) {
+    public  ResponseEntity<Map<RecipeListResponseDTO, Integer>> findRecipesByIngredientIds(@RequestBody List<Integer> ingredientIds) {
         List<String> ingredientNames = ingredientService.findNamesByIds(ingredientIds);
         return ResponseEntity.ok(userIngredientService.recommendWithMatchCount(ingredientNames));
     }
 
+    // 유저가 작성한 레시피 조회 (작성일 기준)
+    @GetMapping("/{userId}/recipes")
+    public ResponseEntity<List<RecipeListResponseDTO>> getUserRecipes(@PathVariable String userId) {
+        return ResponseEntity.ok(userService.getUserRecipes(userId));
+    }
 }

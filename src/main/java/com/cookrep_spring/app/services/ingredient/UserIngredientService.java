@@ -1,7 +1,7 @@
 package com.cookrep_spring.app.services.ingredient;
 
 import com.cookrep_spring.app.dto.recipe.response.RecipeMatchDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeResponseDTO;
+import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
 import com.cookrep_spring.app.models.Recipe;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredient;
@@ -97,8 +97,8 @@ public class UserIngredientService {
      * - key: RecipeResponseDTO
      * - value: 일치 재료 수
      */
-    public Map<RecipeResponseDTO, Integer> recommendWithMatchCount(List<String> ingredientNames) {
-        Map<RecipeResponseDTO, Integer> result = new LinkedHashMap<>();
+    public Map<RecipeListResponseDTO, Integer> recommendWithMatchCount(List<String> ingredientNames) {
+        Map<RecipeListResponseDTO, Integer> result = new LinkedHashMap<>();
 
         if (ingredientNames == null || ingredientNames.isEmpty()) return result;
 
@@ -114,7 +114,7 @@ public class UserIngredientService {
 //                url = presigner.generatePresignedUrls(url);
             }
 
-            RecipeResponseDTO dto = RecipeResponseDTO.of(recipe, url);
+            RecipeListResponseDTO dto = RecipeListResponseDTO.from(recipe);
             result.put(dto, matchCount.intValue());
         }
         return result;
