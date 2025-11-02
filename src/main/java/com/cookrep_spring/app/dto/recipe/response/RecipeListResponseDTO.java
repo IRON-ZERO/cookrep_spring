@@ -21,7 +21,22 @@ public class RecipeListResponseDTO {
     private int cookTime;
     private int likesCount;
     private int kcal;
+    private boolean isScrapped;
 
+    public static RecipeListResponseDTO of(Recipe recipe, boolean scrapped) {
+        return RecipeListResponseDTO.builder()
+                                    .recipeId(recipe.getRecipeId())
+                                    .title(recipe.getTitle())
+                                    .thumbnailImageUrl(recipe.getThumbnailImageUrl())
+                                    .views(recipe.getViews())
+                                    .peopleCount(recipe.getPeopleCount())
+                                    .prepTime(recipe.getPrepTime())
+                                    .cookTime(recipe.getCookTime())
+                                    .likesCount(recipe.getLikesCount())
+                                    .kcal(recipe.getKcal())
+                                    .isScrapped(scrapped)
+                                    .build();
+    }
     public static RecipeListResponseDTO from(Recipe recipe) {
         return RecipeListResponseDTO.builder()
                                     .recipeId(recipe.getRecipeId())

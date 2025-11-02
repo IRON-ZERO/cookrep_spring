@@ -1,6 +1,5 @@
 package com.cookrep_spring.app.repositories.recipe;
 
-import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
 import com.cookrep_spring.app.models.Recipe;
 import org.springframework.data.jpa.repository.JpaRepository;
 
