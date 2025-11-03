@@ -19,13 +19,14 @@ public class RecipePostRequest {
     private int prepTime;
     private int cookTime;
     private List<StepDto> steps;
+    private String[] ingredientNames;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
     public static class StepDto {
-        private int stepOrder;
+        private Integer stepOrder;
         private String contents;
         private String imageUrl;
     }

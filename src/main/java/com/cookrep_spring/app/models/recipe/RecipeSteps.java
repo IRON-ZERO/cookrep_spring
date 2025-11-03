@@ -1,4 +1,4 @@
-package com.cookrep_spring.app.models;
+package com.cookrep_spring.app.models.recipe;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

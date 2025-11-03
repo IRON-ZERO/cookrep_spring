@@ -81,37 +81,40 @@ public class S3Service {
                     .key(key)
                     .build();
 
-            try {
-                s3Client.deleteObject(deleteRequest);
-                System.out.println("S3 object deleted: " + key);
-            } catch (NoSuchKeyException e) {
-                System.out.println("❌ S3 object not found: " + key);
-                throw new S3ObjectNotFoundException("삭제할 수 없습니다. S3 객체가 존재하지 않습니다: " + key);
-            } catch (S3Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException("S3 삭제 실패: " + keyOrUrl, e);
-            }
+            s3Client.deleteObject(deleteRequest);
+            System.out.println("S3 object deleted: " + key);
 
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("URL 형식이 잘못되었습니다: " + keyOrUrl, e);
+        } catch (NoSuchKeyException e) {
+            System.out.println("❌ S3 object not found: " + keyOrUrl);
+            throw new S3ObjectNotFoundException("삭제할 수 없습니다. S3 객체가 존재하지 않습니다: " + keyOrUrl);
+        } catch (S3Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("S3 삭제 실패: " + keyOrUrl, e);
         } catch (Exception e) {
-            throw e; // 필요에 따라 상위에서 처리
+            throw new RuntimeException("S3 삭제 중 예외 발생: " + keyOrUrl, e);
         }
     }
 
-    private String extractKeyFromUrl(String keyOrUrl) throws URISyntaxException {
-        // URL 형식이면 URI로 파싱
+    /**
+     * URL이면 Key 추출, Key면 그대로 반환
+     */
+    private String extractKeyFromUrl(String keyOrUrl) {
         if (keyOrUrl.startsWith("http://") || keyOrUrl.startsWith("https://")) {
-            URI uri = new URI(keyOrUrl);
-            String path = uri.getPath(); // "/bucket-name/folder/file.png"
-            if (path.startsWith("/" + BUCKET_NAME + "/")) {
-                return path.substring(BUCKET_NAME.length() + 2); // "folder/file.png"
+            try {
+                URI uri = new URI(keyOrUrl);
+                String path = uri.getPath(); // "/bucket-name/folder/file.png"
+                int index = path.indexOf(BUCKET_NAME + "/");
+                if (index >= 0) {
+                    return path.substring(index + BUCKET_NAME.length() + 1);
+                }
+                return path.startsWith("/") ? path.substring(1) : path;
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("URL 형식이 잘못되었습니다: " + keyOrUrl, e);
             }
-            // 버킷 이름이 경로에 없으면 "/" 제거 후 반환
-            return path.startsWith("/") ? path.substring(1) : path;
         }
-        // 그냥 Key라면 그대로 반환
+        // 이미 Key면 그대로 반환
         return keyOrUrl;
     }
+
 
 }

@@ -1,5 +1,6 @@
-package com.cookrep_spring.app.models;
+package com.cookrep_spring.app.models.recipe;
 
+import com.cookrep_spring.app.models.ingredient.RecipeIngredient;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +9,6 @@ import lombok.NoArgsConstructor;
 import com.cookrep_spring.app.models.user.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,7 +24,7 @@ public class Recipe {
     private String recipeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @JoinColumn(name = "user_id")
     private User user;     // 작성자 ID (User FK)
 
     @Column(length = 100, nullable = false)
@@ -68,4 +68,7 @@ public class Recipe {
 
     // null 허용
     private Integer kcal;
+
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RecipeIngredient> recipeIngredients;
 }

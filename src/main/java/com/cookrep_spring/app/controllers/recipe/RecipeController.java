@@ -1,6 +1,7 @@
-package com.cookrep_spring.app.controllers;
+package com.cookrep_spring.app.controllers.recipe;
 
-import com.cookrep_spring.app.services.RecipeService;
+import com.cookrep_spring.app.dto.recipe.response.RecipeListResponse;
+import com.cookrep_spring.app.services.recipe.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
 import com.cookrep_spring.app.dto.recipe.response.RecipeDetailResponse;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/recipe")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class RecipeController {
     private final RecipeService recipeService;
     private final S3Service s3Service;
@@ -51,6 +53,13 @@ public class RecipeController {
         return ResponseEntity.ok(response);
     }
 
+    //================== List =================
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<RecipeListResponse>> getRecipeList(@PathVariable String userId){
+        List<RecipeListResponse> response = recipeService.getRecipeList(userId);
+        return ResponseEntity.ok(response);
+    }
+
     //================== detail =================
     @GetMapping("/{recipeId}")
     public ResponseEntity<RecipeDetailResponse> getRecipeDetail(@PathVariable String recipeId){
@@ -58,6 +67,7 @@ public class RecipeController {
         return ResponseEntity.ok(response);
 
     }
+
 
     //================== delete =================
     @DeleteMapping("/{recipeId}")

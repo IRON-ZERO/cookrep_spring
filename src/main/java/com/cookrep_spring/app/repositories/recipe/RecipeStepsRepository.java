@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.repositories.recipe;
 
-import com.cookrep_spring.app.models.RecipeSteps;
+import com.cookrep_spring.app.models.recipe.RecipeSteps;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.dto.recipe.response;
 
-import com.cookrep_spring.app.models.Recipe;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import lombok.Builder;
 import lombok.Data;
 
@@ -23,9 +23,16 @@ public class RecipeDetailResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<String> ingredients;
-    private List<String> steps;
 
-    public static RecipeDetailResponse from(Recipe recipe, List<String> ingredients, List<String> steps, String authorNickname) {
+    // 수정: Map 대신 StepResponse DTO 사용
+    private List<StepResponse> steps;
+
+    public static RecipeDetailResponse from(
+            Recipe recipe,
+            List<String> ingredients,
+            List<StepResponse> steps,
+            String authorNickname
+    ) {
         return RecipeDetailResponse.builder()
                 .recipeId(recipe.getRecipeId())
                 .title(recipe.getTitle())
@@ -44,4 +51,6 @@ public class RecipeDetailResponse {
                 .build();
     }
 }
+
+
 
