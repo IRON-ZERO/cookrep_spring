@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import com.cookrep_spring.app.models.user.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -70,5 +71,9 @@ public class Recipe {
     private Integer kcal;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RecipeIngredient> recipeIngredients;
+    private List<RecipeIngredient> recipeIngredients = new ArrayList<>();
+
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RecipeSteps> steps = new ArrayList<>();
+
 }

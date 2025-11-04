@@ -132,7 +132,7 @@ public class RecipeService {
                 .map(s -> RecipeSteps.builder()
                         .stepOrder(s.getStepOrder())
                         .contents(s.getContents() != null ? s.getContents() : "")
-                        .imageUrl(s.getImageUrl())
+                        .imageUrl(s.getImageUrl() )
                         .recipe(recipe)
                         .build())
                 .collect(Collectors.toList());
