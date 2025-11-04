@@ -1,5 +1,6 @@
 package com.cookrep_spring.app.services.recipe;
 
+import com.cookrep_spring.app.dto.ingredient.response.IngredientRecipeResponse;
 import com.cookrep_spring.app.dto.recipe.response.RecipeListResponse;
 import com.cookrep_spring.app.dto.recipe.response.StepResponse;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
@@ -71,18 +72,18 @@ public class RecipeService {
         recipeStepsRepository.saveAll(steps);
 
         // Ingredient 저장
-        if (dto.getIngredientNames() != null && dto.getIngredientNames().length > 0) {
-            for (String name : dto.getIngredientNames()) {
-                // 이미 존재하는 재료인지 확인
-                Ingredient ingredient = ingredientRepository.findByName(name)
+        if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
+            for (RecipePostRequest.IngredientRequest ingDto : dto.getIngredients()) {
+                // 1. 재료 존재 여부 확인
+                Ingredient ingredient = ingredientRepository.findByName(ingDto.getName())
                         .orElseGet(() -> {
-                            // 없으면 새로 생성
                             Ingredient newIngredient = Ingredient.builder()
-                                    .name(name)
+                                    .name(ingDto.getName())
                                     .build();
                             return ingredientRepository.save(newIngredient);
                         });
-                // 레시피-재료 연결
+
+                // 2. 레시피-재료 연결
                 RecipeIngredient ri = RecipeIngredient.builder()
                         .id(RecipeIngredientPK.builder()
                                 .recipeId(recipe.getRecipeId())
@@ -90,12 +91,13 @@ public class RecipeService {
                                 .build())
                         .recipe(recipe)
                         .ingredient(ingredient)
-                        .count("2개") // 필요에 따라 단위 입력
+                        .count(ingDto.getCount()) // 사용자가 보낸 count 저장
                         .build();
 
                 recipeIngredientRepository.save(ri);
             }
         }
+
 
         return RecipeUpdateResponse.from(recipe)
                 .toBuilder()
@@ -110,6 +112,7 @@ public class RecipeService {
 
         // 기존 Step 및 이미지 정보 가져오기
         List<RecipeSteps> existingSteps = recipeStepsRepository.findByRecipe_RecipeIdOrderByStepOrderAsc(recipeId);
+        List<RecipeIngredient> existingIngredients = recipeIngredientRepository.findByRecipe_RecipeId(recipeId);
 
         // 기존 썸네일 값 따로 저장
         String oldThumbnail = recipe.getThumbnailImageUrl();
@@ -134,6 +137,33 @@ public class RecipeService {
                         .build())
                 .collect(Collectors.toList());
         recipeStepsRepository.saveAll(newSteps);
+
+        // 🔹 Ingredient 업데이트
+        recipeIngredientRepository.deleteAll(existingIngredients);
+
+        if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
+            for (RecipePostRequest.IngredientRequest ingDto : dto.getIngredients()) {
+                Ingredient ingredient = ingredientRepository.findByName(ingDto.getName())
+                        .orElseGet(() -> {
+                            Ingredient newIngredient = Ingredient.builder()
+                                    .name(ingDto.getName())
+                                    .build();
+                            return ingredientRepository.save(newIngredient);
+                        });
+
+                RecipeIngredient ri = RecipeIngredient.builder()
+                        .id(RecipeIngredientPK.builder()
+                                .recipeId(recipe.getRecipeId())
+                                .ingredientId(ingredient.getIngredientId())
+                                .build())
+                        .recipe(recipe)
+                        .ingredient(ingredient)
+                        .count(ingDto.getCount()) // 수정된 수량 반영
+                        .build();
+
+                recipeIngredientRepository.save(ri);
+            }
+        }
 
         // 삭제 대상 S3 URL 수집
         List<String> deleteKeys = new ArrayList<>();
@@ -220,7 +250,6 @@ public class RecipeService {
         // Step 목록 조회
         List<RecipeSteps> steps = recipeStepsRepository.findByRecipe_RecipeIdOrderByStepOrderAsc(recipeId);
 
-        // Step 데이터를 객체 형태로 변환
         List<StepResponse> stepResponses = steps.stream()
                 .map(step -> {
                     String imageKey = step.getImageUrl();
@@ -236,20 +265,30 @@ public class RecipeService {
                             .imageUrl(imageUrl)
                             .build();
                 })
-                .sorted(Comparator.comparingInt(StepResponse::getStepOrder)) // stepOrder 기준 정렬
+                .sorted(Comparator.comparingInt(StepResponse::getStepOrder))
                 .collect(Collectors.toList());
 
+        // Ingredient 목록 조회 (추가 부분)
+        List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe_RecipeId(recipeId);
 
+        List<IngredientRecipeResponse> ingredientResponses = recipeIngredients.stream()
+                .map(ri -> IngredientRecipeResponse.builder()
+                        .name(ri.getIngredient().getName())
+                        .count(ri.getCount())
+                        .build())
+                .collect(Collectors.toList());
+
+        // 작성자 닉네임
         String authorNickname = recipe.getUser() != null ? recipe.getUser().getNickname() : "unknown";
 
         return RecipeDetailResponse.from(
                 recipe.toBuilder().thumbnailImageUrl(thumbnailUrl).build(),
-                List.of(), // ingredients 생략
+                ingredientResponses,   // 이제 실제 재료 리스트 전달
                 stepResponses,
                 authorNickname
         );
-
     }
+
 
 
 

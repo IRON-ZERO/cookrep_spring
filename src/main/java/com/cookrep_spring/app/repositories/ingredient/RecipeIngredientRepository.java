@@ -19,4 +19,6 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
     ORDER BY COUNT(i.ingredientId) DESC, ri.recipe.views DESC
 """)
     List<RecipeMatchDTO> findRecipesWithMatchCount(@Param("ingredientNames") List<String> ingredientNames);
+    List<RecipeIngredient> findByRecipe_RecipeId(String recipeId);
+
 }

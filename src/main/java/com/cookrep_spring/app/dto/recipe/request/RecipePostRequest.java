@@ -19,7 +19,8 @@ public class RecipePostRequest {
     private int prepTime;
     private int cookTime;
     private List<StepDto> steps;
-    private String[] ingredientNames;
+    private List<IngredientRequest> ingredients; // 이름+수량을 함께 받기
+
 
     @Data
     @NoArgsConstructor
@@ -29,5 +30,12 @@ public class RecipePostRequest {
         private Integer stepOrder;
         private String contents;
         private String imageUrl;
+    }
+
+
+    @Data
+    public static class IngredientRequest {
+        private String name;   // 재료 이름
+        private String count;  // 재료 수량
     }
 }
