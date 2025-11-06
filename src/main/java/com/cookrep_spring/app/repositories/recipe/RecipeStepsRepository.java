@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface RecipeStepsRepository extends JpaRepository<RecipeSteps, Integer> {
     List<RecipeSteps> findByRecipe_RecipeIdOrderByStepOrderAsc(String recipeId);
-
 }

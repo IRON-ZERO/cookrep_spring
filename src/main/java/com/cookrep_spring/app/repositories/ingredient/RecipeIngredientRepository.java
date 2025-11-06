@@ -21,4 +21,5 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
     List<RecipeMatchDTO> findRecipesWithMatchCount(@Param("ingredientNames") List<String> ingredientNames);
     List<RecipeIngredient> findByRecipe_RecipeId(String recipeId);
 
+
 }
