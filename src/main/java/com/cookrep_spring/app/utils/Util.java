@@ -1,5 +1,9 @@
 package com.cookrep_spring.app.utils;
 
-public class Util {
+import java.util.UUID;
 
+public class Util {
+	public static String UUIDGenerator() {
+		return UUID.randomUUID().toString();
+	}
 }
