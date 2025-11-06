@@ -1,7 +1,10 @@
 
 server:  
   port: 8080  
-spring:  
+spring:
+  jwt:
+   access-secret:
+   refresh-secret:
   application:  
     name: cookrep_spring  
   datasource:  

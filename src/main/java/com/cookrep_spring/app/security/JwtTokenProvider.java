@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtTokenProvider {
 	private final AuthService authService;
 
-	@Value("${spring.jwt.secret}")
+	@Value("${spring.jwt.access-secret}")
 	private String accessSecretKey = "accessSecretKey";
 	@Value("${spring.jwt.refresh-secret}")
 	private String refreshSecretKey = "refreshSecretKey";
