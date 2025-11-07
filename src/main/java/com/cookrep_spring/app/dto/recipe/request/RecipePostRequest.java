@@ -18,6 +18,7 @@ public class RecipePostRequest {
     private int peopleCount;
     private int prepTime;
     private int cookTime;
+    private Integer kcal;
     private List<StepDto> steps;
     private List<IngredientRequest> ingredients; // 이름+수량을 함께 받기
 

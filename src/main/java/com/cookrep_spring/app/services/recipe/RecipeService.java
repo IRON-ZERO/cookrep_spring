@@ -40,6 +40,7 @@ public class RecipeService {
     private final IngredientRepository ingredientRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
 
+    // =============== upload =================
     @Transactional
     public RecipeUpdateResponse saveRecipe(String userId, RecipePostRequest dto) {
         User user = userRepository.findById(userId)
@@ -55,6 +56,7 @@ public class RecipeService {
                 .peopleCount(dto.getPeopleCount())
                 .prepTime(dto.getPrepTime())
                 .cookTime(dto.getCookTime())
+                .kcal(dto.getKcal())
                 .build();
 
         recipeRepository.save(recipe);
@@ -105,6 +107,7 @@ public class RecipeService {
                 .build();
     }
 
+    // =============== update =================
     @Transactional
     public RecipeUpdateResponse updateRecipe(String recipeId, RecipePostRequest dto) {
         Recipe recipe = recipeRepository.findById(recipeId)
@@ -123,6 +126,10 @@ public class RecipeService {
         recipe.setPeopleCount(dto.getPeopleCount());
         recipe.setPrepTime(dto.getPrepTime());
         recipe.setCookTime(dto.getCookTime());
+        // kcal 업데이트
+        if (dto.getKcal() != null) {
+            recipe.setKcal(dto.getKcal());
+        }
         recipeRepository.save(recipe);
 
         // 기존 Step 삭제 후 새 Step 저장
@@ -139,30 +146,48 @@ public class RecipeService {
         recipeStepsRepository.saveAll(newSteps);
 
         // 🔹 Ingredient 업데이트
-        recipeIngredientRepository.deleteAll(existingIngredients);
+        // 기존 재료와 비교 후 추가/삭제/수정 처리
+        List<RecipePostRequest.IngredientRequest> dtoIngredients = dto.getIngredients() != null
+                ? dto.getIngredients()
+                : new ArrayList<>();
 
-        if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
-            for (RecipePostRequest.IngredientRequest ingDto : dto.getIngredients()) {
-                Ingredient ingredient = ingredientRepository.findByName(ingDto.getName())
-                        .orElseGet(() -> {
-                            Ingredient newIngredient = Ingredient.builder()
-                                    .name(ingDto.getName())
-                                    .build();
-                            return ingredientRepository.save(newIngredient);
-                        });
+        // 삭제: DB에는 있지만 DTO에는 없는 재료
+        List<String> namesToDelete = existingIngredients.stream()
+                .filter(ri -> dtoIngredients.stream()
+                        .noneMatch(di -> di.getName().equals(ri.getIngredient().getName())))
+                .map(ri -> ri.getIngredient().getName())
+                .toList();
 
-                RecipeIngredient ri = RecipeIngredient.builder()
-                        .id(RecipeIngredientPK.builder()
-                                .recipeId(recipe.getRecipeId())
-                                .ingredientId(ingredient.getIngredientId())
-                                .build())
-                        .recipe(recipe)
-                        .ingredient(ingredient)
-                        .count(ingDto.getCount()) // 수정된 수량 반영
-                        .build();
+        for (String name : namesToDelete) {
+            // 부분 삭제
+            recipeIngredientRepository.deleteByRecipeIdAndIngredientName(recipeId, name);
+        }
 
-                recipeIngredientRepository.save(ri);
-            }
+        // DB에 있거나 새로 추가할 재료 처리
+        for (RecipePostRequest.IngredientRequest ingDto : dtoIngredients) {
+            // 이름으로 Ingredient 조회, 없으면 새로 저장
+            Ingredient ingredient = ingredientRepository.findByName(ingDto.getName())
+                    .orElseGet(() -> ingredientRepository.save(
+                            Ingredient.builder().name(ingDto.getName()).build()
+                    ));
+
+            // DB에 이미 존재하면 기존 객체 가져오기
+            RecipeIngredient ri = existingIngredients.stream()
+                    .filter(e -> e.getIngredient().getIngredientId().equals(ingredient.getIngredientId()))
+                    .findFirst()
+                    .orElseGet(() -> RecipeIngredient.builder()
+                            .id(RecipeIngredientPK.builder()
+                                    .recipeId(recipe.getRecipeId())
+                                    .ingredientId(ingredient.getIngredientId())
+                                    .build())
+                            .recipe(recipe)
+                            .ingredient(ingredient)
+                            .build()
+                    );
+
+            // 수량 업데이트
+            ri.setCount(ingDto.getCount());
+            recipeIngredientRepository.save(ri);
         }
 
         // 삭제 대상 S3 URL 수집
@@ -200,7 +225,7 @@ public class RecipeService {
                 .build();
     }
 
-
+    // =============== List All =================
     @Transactional(readOnly = true)
     public List<RecipeListResponse> getRecipeList(String userId){
         // 1. 유저 검증
@@ -233,6 +258,7 @@ public class RecipeService {
 
     }
 
+    // =============== Detail =================
     @Transactional(readOnly = true)
     public RecipeDetailResponse getRecipeDetail(String recipeId) {
         Recipe recipe = recipeRepository.findById(recipeId)
@@ -291,7 +317,7 @@ public class RecipeService {
 
 
 
-
+    // =============== delete =================
     @Transactional
     public boolean deleteRecipe(String recipeId) {
         // 1. 레시피 조회
