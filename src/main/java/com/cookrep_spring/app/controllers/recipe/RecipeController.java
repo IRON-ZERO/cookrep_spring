@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/recipe")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class RecipeController {
     private final RecipeService recipeService;
     private final S3Service s3Service;
