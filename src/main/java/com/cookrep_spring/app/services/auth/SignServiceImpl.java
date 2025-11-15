@@ -1,5 +1,7 @@
 package com.cookrep_spring.app.services.auth;
 
+import java.util.Map;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -12,6 +14,7 @@ import com.cookrep_spring.app.repositories.user.UserRepository;
 import com.cookrep_spring.app.security.JwtTokenProvider;
 import com.cookrep_spring.app.utils.Util;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,11 +34,14 @@ public class SignServiceImpl implements SignService {
 		if (!matches) {
 			return authResult(ResponseEnum.FAIL, "비밀번호가 일치하지 않습니다.");
 		}
+		String uuid = Util.UUIDGenerator();
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getNickname());
-		String refreshToken = jwtTokenProvider.createRefresthToken(user.getNickname());
+		String refreshToken = jwtTokenProvider.createRefresthToken(user.getUserId(), user.getNickname(), uuid);
 		user.setRefreshToken(refreshToken);
+		user.setRefreshTokenId(uuid);
 		userRepo.save(user);
-		return authResult(ResponseEnum.SUCCESS, "로그인에 성공하였습니다.", accessToken, refreshToken);
+		Map<String, String> data = Map.of("userId", user.getUserId());
+		return authResult(ResponseEnum.SUCCESS, "로그인에 성공하였습니다.", data, accessToken, refreshToken);
 	}
 
 	@Override
@@ -44,16 +50,18 @@ public class SignServiceImpl implements SignService {
 		if (user == null) {
 			return authResult(ResponseEnum.FAIL, "등록되지 않은 유저 입니다.");
 		}
-		System.out.println("user :: " + user.getEmail());
 		boolean matches = passwordEncoder.matches(password, user.getPassword());
 		if (!matches) {
 			return authResult(ResponseEnum.FAIL, "비밀번호가 일치하지 않습니다.");
 		}
+		String uuid = Util.UUIDGenerator();
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getNickname());
-		String refreshToken = jwtTokenProvider.createRefresthToken(user.getNickname());
+		String refreshToken = jwtTokenProvider.createRefresthToken(user.getUserId(), user.getNickname(), uuid);
 		user.setRefreshToken(refreshToken);
+		user.setRefreshTokenId(uuid);
 		userRepo.save(user);
-		return authResult(ResponseEnum.SUCCESS, "로그인에 성공하였습니다.", accessToken, refreshToken);
+		Map<String, String> data = Map.of("userId", user.getUserId());
+		return authResult(ResponseEnum.SUCCESS, "로그인에 성공하였습니다.", data, accessToken, refreshToken);
 	}
 
 	@Override
@@ -93,11 +101,30 @@ public class SignServiceImpl implements SignService {
 		return authResult(ResponseEnum.SUCCESS, "회원가입되었습니다.");
 	}
 
+	@Override
+	public AuthResponseDto logoutUser(HttpServletRequest request) {
+		String accessToken = jwtTokenProvider.resolveAccessToken(request);
+		boolean validateAccessToken = jwtTokenProvider.validateAccessToken(accessToken);
+		String userId = jwtTokenProvider.getUserId(accessToken);
+		if (!validateAccessToken) {
+			return authResult(ResponseEnum.FAIL, "유효한 토큰이 아닙니다.");
+		}
+		User user = userRepo.findByUserId(userId);
+		if (user != null) {
+			user.setRefreshToken(null);
+			user.setRefreshTokenId(null);
+			userRepo.save(user);
+		}
+		return authResult(ResponseEnum.SUCCESS, "로그아웃에 성공하였습니다.");
+	}
+
 	private AuthResponseDto authResult(ResponseEnum statusCode, String msg) {
 		return AuthResponseDto.builder().statusCode(statusCode).msg(msg).build();
 	}
 
-	private AuthResponseDto authResult(ResponseEnum statusCode, String msg, String access, String refresh) {
-		return AuthResponseDto.builder().statusCode(statusCode).msg(msg).access(access).refresh(refresh).build();
+	private AuthResponseDto authResult(ResponseEnum statusCode, String msg, Object data, String access,
+		String refresh) {
+		return AuthResponseDto.builder().statusCode(statusCode).msg(msg).data(data).access(access).refresh(refresh).build();
 	}
+
 }

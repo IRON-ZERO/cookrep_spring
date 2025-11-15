@@ -30,4 +30,13 @@ public class CustomUserDetail implements UserDetails {
 		// TODO Auto-generated method stub
 		return user.getNickname();
 	}
+
+	public String getUserId() {
+		return user.getUserId();
+	}
+
+	public String getUserEmail() {
+		return user.getEmail();
+	}
+
 }

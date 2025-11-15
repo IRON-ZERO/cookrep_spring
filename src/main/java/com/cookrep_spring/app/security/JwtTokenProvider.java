@@ -36,13 +36,40 @@ public class JwtTokenProvider {
 		return createToken(userId, loginId, accessTokenValidMilli, accessSecretKey);
 	}
 
-	public String createRefresthToken(String loginId) {
-		return createToken(null, loginId, refreshTokenValidMilli, refreshSecretKey);
+	public String createRefresthToken(String userId, String loginId, String refreshId) {
+		return createToken(userId, loginId, refreshTokenValidMilli, refreshSecretKey, refreshId);
 	}
 
 	public Authentication getAuthentication(String token) {
 		UserDetails userDetail = authService.loadUserByUsername(this.getUsername(token));
-		return new UsernamePasswordAuthenticationToken(userDetail, "");
+		return new UsernamePasswordAuthenticationToken(userDetail, "", userDetail.getAuthorities());
+	}
+
+	public boolean validateAccessToken(String token) {
+		try {
+			SecretKey key = Keys.hmacShaKeyFor(accessSecretKey.getBytes(StandardCharsets.UTF_8));
+			Claims payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+			return !payload.getExpiration().before(new Date());
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean validateRefreshToken(String token) {
+		try {
+			SecretKey key = Keys.hmacShaKeyFor(refreshSecretKey.getBytes(StandardCharsets.UTF_8));
+			Claims payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+			return !payload.getExpiration().before(new Date());
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public String refreshingToken(String refreshToken) {
+		String userId = this.getUserId(refreshToken);
+		String username = this.getUsername(refreshToken);
+		String accessToken = createAccessToken(userId, username);
+		return accessToken;
 	}
 
 	public String getUsername(String token) {
@@ -50,6 +77,25 @@ public class JwtTokenProvider {
 		String loginId = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().get("loginId",
 			String.class);
 		return loginId;
+	}
+
+	public String getUserId(String token) {
+		SecretKey key = Keys.hmacShaKeyFor(accessSecretKey.getBytes(StandardCharsets.UTF_8));
+		String userId = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().get("userId",
+			String.class);
+		return userId;
+	}
+
+	private String resovleTokenByCookie(HttpServletRequest request, String cookieType) {
+		if (request.getCookies() == null) {
+			return null;
+		}
+		for (Cookie c : request.getCookies()) {
+			if (c.getName().equals(cookieType)) {
+				return c.getValue();
+			}
+		}
+		return null;
 	}
 
 	public String resolveAccessToken(HttpServletRequest request) {
@@ -60,33 +106,21 @@ public class JwtTokenProvider {
 		return resovleTokenByCookie(request, "refresh_token");
 	}
 
-	public boolean validateToken(String token) {
-		try {
-			SecretKey key = Keys.hmacShaKeyFor(accessSecretKey.getBytes(StandardCharsets.UTF_8));
-			Claims payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-			return !payload.getExpiration().before(new Date());
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
-	private String resovleTokenByCookie(HttpServletRequest request, String cookieType) {
-		if (request.getCookies() == null) {
-			return null;
-		}
-		for (Cookie c : request.getCookies()) {
-			if (c.equals(cookieType)) {
-				return c.getValue();
-			}
-		}
-		return null;
-	}
-
 	private String createToken(String userId, String loginId, long validTime, String secretKey) {
 		Date now = new Date();
 		Date expiry = new Date(now.getTime() + validTime);
 		SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 		String token = Jwts.builder().claim("userId", userId).claim("loginId", loginId).issuedAt(now).expiration(expiry)
+			.signWith(key).compact();
+		return token;
+	}
+
+	private String createToken(String userId, String loginId, long validTime, String secretKey, String refreshId) {
+		Date now = new Date();
+		Date expiry = new Date(now.getTime() + validTime);
+		SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+		String token = Jwts.builder().claim("userId", userId).claim("loginId", loginId).claim(refreshId, refreshId)
+			.issuedAt(now).expiration(expiry)
 			.signWith(key).compact();
 		return token;
 	}

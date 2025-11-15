@@ -19,16 +19,25 @@ public class User {
 
 	@Id
 	private String userId;
+
 	@Column(nullable = false, unique = true)
 	private String email;
 
-	@Column(nullable = false)
-	private String password;
 	@Column(nullable = false, unique = true)
 	private String nickname;
+
+	@Column(nullable = false)
+	private String password;
+
 	private String firstName;
 	private String lastName;
 	private String country;
 	private String city;
+
+	@Column(length = 512)
 	private String refreshToken;
+
+	@Column(length = 100)
+	private String refreshTokenId;
+
 }
