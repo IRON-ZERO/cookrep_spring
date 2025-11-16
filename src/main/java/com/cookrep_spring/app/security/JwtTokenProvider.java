@@ -30,15 +30,24 @@ public class JwtTokenProvider {
 	@Value("${spring.jwt.refresh-secret}")
 	private String refreshSecretKey;
 
-	private final long accessTokenValidMilli = 1000l * 60 * 60 * 5;
-	private final long refreshTokenValidMilli = 1000l * 60 * 60 * 24 * 7;
+	private static final long MILLISECONDS_PER_SECOND = 1000l;
+	private static final int SECONDS_PER_MIN = 60;
+	private static final int MINUTES_PER_HOUR = 60;
+	private static final int HOURS_PER_DAY = 24;
+	private static final int ACCESS_TOKEN_HOURS = 5;
+	private static final int REFRESH_TOKEN_DAYS = 7;
+
+	private final long ACCESS_TOKEN_VALIDATE_MILLISEC = MILLISECONDS_PER_SECOND * SECONDS_PER_MIN * MINUTES_PER_HOUR
+		* ACCESS_TOKEN_HOURS;
+	private final long REFRESH_TOKEN_VALIDATE_MILLISEC = MILLISECONDS_PER_SECOND * SECONDS_PER_MIN * MINUTES_PER_HOUR
+		* HOURS_PER_DAY * REFRESH_TOKEN_DAYS;
 
 	public String createAccessToken(String userId, String loginId) {
-		return createToken(userId, loginId, accessTokenValidMilli, accessSecretKey);
+		return createToken(userId, loginId, ACCESS_TOKEN_VALIDATE_MILLISEC, accessSecretKey);
 	}
 
 	public String createRefreshToken(String userId, String loginId, String refreshId) {
-		return createToken(userId, loginId, refreshTokenValidMilli, refreshSecretKey, refreshId);
+		return createToken(userId, loginId, REFRESH_TOKEN_VALIDATE_MILLISEC, refreshSecretKey, refreshId);
 	}
 
 	public Authentication getAuthentication(String token) {

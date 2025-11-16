@@ -21,13 +21,10 @@ public class AuthService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String input) throws UsernameNotFoundException {
-		User user;
 		boolean matches = Pattern.matches(emailRegex, input);
-
-		if (matches) {
-			user = userRepo.findByEmail(input);
-		} else {
-			user = userRepo.findByNickname(input);
+		User user = matches ? user = userRepo.findByEmail(input) : userRepo.findByNickname(input);
+		if (user == null) {
+			throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
 		}
 		return new CustomUserDetail(user);
 	}
