@@ -1,5 +1,7 @@
 package com.cookrep_spring.app.services.auth;
 
+import java.util.regex.Pattern;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,11 +17,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService implements UserDetailsService {
 	private final UserRepository userRepo;
+	private final String emailRegex = "[a-zA-Z0-9]([_-]?[a-zA-Z0-9])*@[a-zA-Z0-9]([.]?[a-zA-Z0-9]){2,5}\\.[a-zA-Z]{2,5}";
 
 	@Override
 	public UserDetails loadUserByUsername(String input) throws UsernameNotFoundException {
 		User user;
-		if (input.contains("@")) {
+		boolean matches = Pattern.matches(emailRegex, input);
+
+		if (matches) {
 			user = userRepo.findByEmail(input);
 		} else {
 			user = userRepo.findByNickname(input);

@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.controllers.auth;
 
-import org.apache.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,55 +32,53 @@ public class AuthController {
 	@PostMapping("/loginByNickname")
 	public ResponseEntity<ResultResponseDto> loginByNickName(@RequestBody
 	LoginUserDto dto, HttpServletResponse response) {
-		AuthResponseDto result = signService.loginByNickname(dto.getUserId(), dto.getPassword());
-		createCookie(response, result.getAccess(), result.getRefresh());
-		AuthResponseDto authResponseDto = AuthResponseDto.builder().statusCode(result.getStatusCode()).msg(result.getMsg())
-			.data(result.getData())
-			.build();
-		if (authResponseDto.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
-			return ResponseEntity.ok(authResponseDto);
+		AuthResponseDto nicknameLoginResult = signService.loginByNickname(dto.getUserId(), dto.getPassword());
+		ResultResponseDto result = result(nicknameLoginResult.getStatusCode(), nicknameLoginResult.getMsg());
+		if (result.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
+			createCookie(response, nicknameLoginResult.getAccess(), nicknameLoginResult.getRefresh());
+			return ResponseEntity.ok(result);
 		} else {
-			return ResponseEntity.status(HttpStatus.SC_UNAUTHORIZED).body(authResponseDto);
+			return ResponseEntity.status(HttpStatusCode.valueOf(401)).body(result);
 		}
 
 	}
 
 	@PostMapping("/loginByEmail")
-	public ResponseEntity<AuthResponseDto> loginByEmail(@RequestBody
+	public ResponseEntity<ResultResponseDto> loginByEmail(@RequestBody
 	LoginUserDto dto, HttpServletResponse response) {
-		AuthResponseDto result = signService.loginByEmail(dto.getUserId(), dto.getPassword());
-		createCookie(response, result.getAccess(), result.getRefresh());
-		AuthResponseDto authResponseDto = AuthResponseDto.builder().statusCode(result.getStatusCode()).msg(result.getMsg())
-			.data(result.getData())
-			.build();
-		if (authResponseDto.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
-			return ResponseEntity.ok(authResponseDto);
+		AuthResponseDto emailLoginResult = signService.loginByEmail(dto.getUserId(), dto.getPassword());
+		ResultResponseDto result = result(emailLoginResult.getStatusCode(), emailLoginResult.getMsg());
+		if (emailLoginResult.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
+			createCookie(response, emailLoginResult.getAccess(), emailLoginResult.getRefresh());
+			return ResponseEntity.ok(result);
 		} else {
-			return ResponseEntity.status(HttpStatus.SC_UNAUTHORIZED).body(authResponseDto);
+			return ResponseEntity.status(HttpStatusCode.valueOf(401)).body(result);
 		}
 	}
 
 	@PostMapping("/join")
-	public ResponseEntity<AuthResponseDto> join(@RequestBody
+	public ResponseEntity<ResultResponseDto> join(@RequestBody
 	CreateUserDto dto) {
 		AuthResponseDto createUser = signService.joinUser(dto);
 		if (createUser.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
-			return ResponseEntity.ok(createUser);
+			return ResponseEntity.ok(result(createUser.getStatusCode(), createUser.getMsg()));
 		} else {
-			return ResponseEntity.status(HttpStatus.SC_BAD_REQUEST).body(createUser);
+			return ResponseEntity.status(HttpStatusCode.valueOf(400))
+				.body(result(createUser.getStatusCode(), createUser.getMsg()));
 		}
 	}
 
 	@PostMapping("/logout")
 	public ResponseEntity<ResultResponseDto> logout(HttpServletRequest request, HttpServletResponse response) {
 		AuthResponseDto logoutUser = signService.logoutUser(request);
-		System.out.println(logoutUser.getStatusCode());
 		if (logoutUser.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
-			deleteCookie(response, "access_token");
-			deleteCookie(response, "refresh_token");
+			Cookie access = buildCookie("access_token", null, 0);
+			Cookie refresh = buildCookie("refresh_token", null, 0);
+			response.addCookie(access);
+			response.addCookie(refresh);
 			return ResponseEntity.ok(result(logoutUser.getStatusCode(), logoutUser.getMsg()));
 		} else {
-			return ResponseEntity.status(HttpStatus.SC_BAD_REQUEST)
+			return ResponseEntity.status(HttpStatusCode.valueOf(400))
 				.body(result(logoutUser.getStatusCode(), logoutUser.getMsg()));
 		}
 	}
@@ -96,27 +94,19 @@ public class AuthController {
 	}
 
 	private void createCookie(HttpServletResponse response, String access, String refresh) {
-		Cookie accessCookie = new Cookie("access_token", access);
-		accessCookie.setHttpOnly(true);
-		accessCookie.setSecure(false);
-		accessCookie.setPath("/");
-		accessCookie.setMaxAge(60 * 60 * 5);
-		Cookie refreshCookie = new Cookie("refresh_token", refresh);
-		refreshCookie.setHttpOnly(true);
-		refreshCookie.setSecure(false);
-		refreshCookie.setPath("/");
-		refreshCookie.setMaxAge(60 * 60 * 24 * 7);
+		Cookie accessCookie = buildCookie("access_token", access, 60 * 60 * 5);
+		Cookie refreshCookie = buildCookie("refresh_token", refresh, 60 * 60 * 24 * 7);
 		response.addCookie(accessCookie);
 		response.addCookie(refreshCookie);
 	}
 
-	private void deleteCookie(HttpServletResponse response, String cookieName) {
-		Cookie cookie = new Cookie(cookieName, null);
+	private Cookie buildCookie(String cookieName, String value, int maxAge) {
+		Cookie cookie = new Cookie(cookieName, value);
 		cookie.setHttpOnly(true);
-		cookie.setSecure(false);
+		cookie.setSecure(true);
 		cookie.setPath("/");
-		cookie.setMaxAge(0);
-		response.addCookie(cookie);
+		cookie.setMaxAge(maxAge);
+		return cookie;
 	}
 
 	private ResultResponseDto result(ResponseEnum responseEnum, String msg) {
