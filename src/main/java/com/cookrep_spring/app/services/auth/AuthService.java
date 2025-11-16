@@ -29,4 +29,18 @@ public class AuthService implements UserDetailsService {
 		return new CustomUserDetail(user);
 	}
 
+	public String getRefreshId(String userId) {
+		User user = userRepo.findByUserId(userId);
+		if (user == null) {
+			throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
+		}
+		return user.getRefreshTokenId();
+	}
+
+	public void clearRefreshToken(String userId) {
+		User user = userRepo.findByUserId(userId);
+		user.setRefreshToken(null);
+		user.setRefreshTokenId(null);
+		userRepo.save(user);
+	}
 }

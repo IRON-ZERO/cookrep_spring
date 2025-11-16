@@ -17,6 +17,7 @@ import com.cookrep_spring.app.dto.auth.response.ResultResponseDto;
 import com.cookrep_spring.app.dto.auth.response.UserInfoDto;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.auth.SignServiceImpl;
+import com.cookrep_spring.app.utils.Util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,8 +73,8 @@ public class AuthController {
 	public ResponseEntity<ResultResponseDto> logout(HttpServletRequest request, HttpServletResponse response) {
 		AuthResponseDto logoutUser = signService.logoutUser(request);
 		if (logoutUser.getStatusCode().getCode() == ResponseEnum.SUCCESS.getCode()) {
-			Cookie access = buildCookie("access_token", null, 0);
-			Cookie refresh = buildCookie("refresh_token", null, 0);
+			Cookie access = Util.buildCookie(Util.ACCESS_TOKEN, null, 0);
+			Cookie refresh = Util.buildCookie(Util.REFRESH_TOKEN, null, 0);
 			response.addCookie(access);
 			response.addCookie(refresh);
 			return ResponseEntity.ok(result(logoutUser.getStatusCode(), logoutUser.getMsg()));
@@ -94,19 +95,10 @@ public class AuthController {
 	}
 
 	private void createCookie(HttpServletResponse response, String access, String refresh) {
-		Cookie accessCookie = buildCookie("access_token", access, 60 * 60 * 5);
-		Cookie refreshCookie = buildCookie("refresh_token", refresh, 60 * 60 * 24 * 7);
+		Cookie accessCookie = Util.buildCookie(Util.ACCESS_TOKEN, access, 60 * 60 * 5);
+		Cookie refreshCookie = Util.buildCookie(Util.REFRESH_TOKEN, refresh, 60 * 60 * 24 * 7);
 		response.addCookie(accessCookie);
 		response.addCookie(refreshCookie);
-	}
-
-	private Cookie buildCookie(String cookieName, String value, int maxAge) {
-		Cookie cookie = new Cookie(cookieName, value);
-		cookie.setHttpOnly(true);
-		cookie.setSecure(true);
-		cookie.setPath("/");
-		cookie.setMaxAge(maxAge);
-		return cookie;
 	}
 
 	private ResultResponseDto result(ResponseEnum responseEnum, String msg) {

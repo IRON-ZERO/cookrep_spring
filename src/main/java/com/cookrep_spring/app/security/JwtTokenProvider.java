@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.cookrep_spring.app.services.auth.AuthService;
+import com.cookrep_spring.app.utils.Util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -75,7 +76,7 @@ public class JwtTokenProvider {
 		}
 	}
 
-	public String refreshingToken(String refreshToken) {
+	public String refreshingAccessToken(String refreshToken) {
 		String userId = this.getUserIdByRefresh(refreshToken);
 		String username = this.getUsernameByRefresh(refreshToken);
 		String accessToken = createAccessToken(userId, username);
@@ -110,6 +111,13 @@ public class JwtTokenProvider {
 		return userId;
 	}
 
+	public String getRefreshTokenId(String token) {
+		SecretKey key = Keys.hmacShaKeyFor(refreshSecretKey.getBytes(StandardCharsets.UTF_8));
+		String refreshId = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().get("refreshId",
+			String.class);
+		return refreshId;
+	}
+
 	private String resolveTokenByCookie(HttpServletRequest request, String cookieType) {
 		if (request.getCookies() == null) {
 			return null;
@@ -123,11 +131,11 @@ public class JwtTokenProvider {
 	}
 
 	public String resolveAccessToken(HttpServletRequest request) {
-		return resolveTokenByCookie(request, "access_token");
+		return resolveTokenByCookie(request, Util.ACCESS_TOKEN);
 	}
 
 	public String resolveRefreshToken(HttpServletRequest request) {
-		return resolveTokenByCookie(request, "refresh_token");
+		return resolveTokenByCookie(request, Util.REFRESH_TOKEN);
 	}
 
 	private String createToken(String userId, String loginId, long validTime, String secretKey) {
