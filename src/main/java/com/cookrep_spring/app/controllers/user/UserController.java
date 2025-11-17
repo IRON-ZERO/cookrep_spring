@@ -84,6 +84,9 @@ public class UserController {
                                                                                  @RequestBody UserIngredientAddRequestDTO ingredientAddRequestDTO) {
         String userId = userDetails.getUserId();
         String[] ingredientNames = ingredientAddRequestDTO.getIngredientNames();
+        if (ingredientNames == null || ingredientNames.length == 0) {
+            return ResponseEntity.badRequest().body(null);
+        }
         List<UserIngredientAddResponseDTO> result = userIngredientService.addIngredients(userId, ingredientNames);
         return ResponseEntity.ok(result);
     }
