@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		return path.startsWith("/api/loginByEmail")
 			|| path.startsWith("/api/loginByNickname")
 			|| path.startsWith("/api/check")
-			|| path.startsWith("/");
+			|| path.equals("/");
 	}
 
 	@Override
