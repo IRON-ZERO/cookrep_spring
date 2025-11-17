@@ -134,7 +134,7 @@ public class UserController {
      * 해당 레시피 스크랩 취소
      */
     @DeleteMapping("/me/scraps/{recipeId}")
-    public ResponseEntity<Void> cancleUserScraps(@AuthenticationPrincipal CustomUserDetail userDetails,
+    public ResponseEntity<Void> cancelUserScraps(@AuthenticationPrincipal CustomUserDetail userDetails,
                                                  @PathVariable String recipeId){
         String userId = userDetails.getUserId();
         scrapService.cancelScrap(userId, recipeId);
