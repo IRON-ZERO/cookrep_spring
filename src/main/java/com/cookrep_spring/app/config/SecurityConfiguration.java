@@ -29,9 +29,10 @@ public class SecurityConfiguration {
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(
 				auth -> auth
+					.requestMatchers("/", "/api/loginByNickname", "/api/loginByEmail", "/api/join", "/api/check").permitAll()
 					// 인증 필요 시 활성화 
-					//.requestMatchers("").authenticated()
-					.anyRequest().permitAll())
+					//.requestMatchers("").permitAll()
+					.anyRequest().authenticated())
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
