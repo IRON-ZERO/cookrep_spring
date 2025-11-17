@@ -31,13 +31,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+		String path = request.getRequestURI();
+		return path.startsWith("/api/loginByEmail")
+			|| path.startsWith("/api/loginByNickname")
+			|| path.startsWith("/api/check")
+			|| path.startsWith("/");
+	}
+
+	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
 		String accessToken = jwtTokenProvider.resolveAccessToken(request);
 		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
 
-		if (accessToken == null) {
-			if (refreshToken != null && jwtTokenProvider.validateRefreshToken(refreshToken)) {
+		if (accessToken == null || !jwtTokenProvider.validateAccessToken(accessToken)) {
+			if (refreshToken == null) {
+				sendUnauthorized(response, "인증정보가 없습니다. 다시 로그인해주세요.");
+				return;
+			}
+			if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
 				sendUnauthorized(response, "토큰이 만료되었습니다. 다시 로그인해주세요.");
 				return;
 			}
@@ -53,8 +66,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			Cookie accessCookie = Util.buildCookie(Util.ACCESS_TOKEN, newAccessToken, 60 * 60 * 5);
 			response.addCookie(accessCookie);
 			setAuthentication(newAccessToken);
-		} else if (jwtTokenProvider.validateAccessToken(accessToken)) {
-			setAuthentication(accessToken);
+		} else {
+			if (jwtTokenProvider.validateAccessToken(accessToken)) {
+				setAuthentication(accessToken);
+			}
 
 		}
 		filterChain.doFilter(request, response);
