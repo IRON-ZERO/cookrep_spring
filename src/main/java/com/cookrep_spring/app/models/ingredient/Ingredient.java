@@ -19,6 +19,9 @@ public class Ingredient {
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at",
+            insertable = false,
+            updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 }

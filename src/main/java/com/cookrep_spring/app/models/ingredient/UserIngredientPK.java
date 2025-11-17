@@ -6,7 +6,7 @@ import lombok.*;
 import java.io.Serializable;
 
 @Embeddable
-@Getter @Setter
+@Data
 @NoArgsConstructor @AllArgsConstructor @EqualsAndHashCode
 public class UserIngredientPK implements Serializable {
     // UserIngredient의 복합키로 사용할 클래스
