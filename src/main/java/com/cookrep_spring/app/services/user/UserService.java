@@ -69,7 +69,7 @@ public class UserService {
         if (!userRepository.existsById(userId)) {
             throw new EntityNotFoundException("유저를 찾을 수 없습니다.");
         }
-        // [2] scraped recipes 목록 조회
+        // [2] 스크랩 여부 확인을 위한 레시피 ID 목록 조회
         List<String> scrappedIds = scrapRepository.findRecipeIdsByUserId(userId);
         Set<String> scrappedSet = new HashSet<>(scrappedIds);
 

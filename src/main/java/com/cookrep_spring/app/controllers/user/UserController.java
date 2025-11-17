@@ -87,6 +87,9 @@ public class UserController {
         if (ingredientNames == null || ingredientNames.length == 0) {
             return ResponseEntity.badRequest().body(null);
         }
+        if (ingredientNames == null || ingredientNames.length == 0) {
+            return ResponseEntity.badRequest().body(null);
+        }
         List<UserIngredientAddResponseDTO> result = userIngredientService.addIngredients(userId, ingredientNames);
         return ResponseEntity.ok(result);
     }
@@ -128,7 +131,6 @@ public class UserController {
                                               @RequestBody ScrapAddRequestDTO scrapAddRequestDTO){
         String userId = userDetails.getUserId();
         String recipeId = scrapAddRequestDTO.getRecipeId();
-        System.out.println(recipeId);
         scrapService.scrapRecipe(userId, recipeId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

@@ -127,10 +127,10 @@ public class UserIngredientService {
             Long matchCount = recipeDTO.getMatchCount();
 
             String url = recipe.getThumbnailImageUrl();
-            if (url != null && !url.startsWith("https://")) {
-                // Presigned URL 로직은 나중에 S3Service 붙이기
-                // url = presigner.generatePresignedUrls(url);
-            }
+            // TODO: S3Service 구현 후 Presigned URL 생성 로직 추가 필요
+            // if (url != null && !url.startsWith("https://")) {
+            //     url = presigner.generatePresignedUrls(url);
+            // }
 
             RecipeListResponseDTO dto = RecipeListResponseDTO.from(recipe);
             result.put(dto, matchCount.intValue());
