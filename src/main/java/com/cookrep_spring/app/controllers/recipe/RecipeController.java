@@ -1,6 +1,11 @@
 package com.cookrep_spring.app.controllers.recipe;
 
+import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsRequestDTO;
 import com.cookrep_spring.app.dto.recipe.response.RecipeListResponse;
+import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
+import com.cookrep_spring.app.security.CustomUserDetail;
+import com.cookrep_spring.app.services.ingredient.IngredientService;
+import com.cookrep_spring.app.services.ingredient.UserIngredientService;
 import com.cookrep_spring.app.services.recipe.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
@@ -9,6 +14,8 @@ import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +27,9 @@ import java.util.Map;
 //@CrossOrigin(origins = "http://localhost:5173")
 public class RecipeController {
     private final RecipeService recipeService;
+    private final IngredientService ingredientService;
+    private final UserIngredientService userIngredientService;
+
     private final S3Service s3Service;
 
     //================== upload =================
@@ -35,17 +45,20 @@ public class RecipeController {
 
     // 클라이언트에서 s3 업로드 완료 후, db에 최종 업로드 api
     @PostMapping("/{userId}")
+    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
     public ResponseEntity<RecipeUpdateResponse> registerRecipe(
-            @PathVariable String userId,
+            @AuthenticationPrincipal CustomUserDetail userDetails,
             @RequestBody RecipePostRequest request)
     {
-        RecipeUpdateResponse response = recipeService.saveRecipe(userId, request);
+        RecipeUpdateResponse response = recipeService.saveRecipe(userDetails.getUserId(), request);
         return ResponseEntity.ok(response);
     }
 
     //================== update =================
     @PutMapping("/{recipeId}")
+    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
     public ResponseEntity<RecipeUpdateResponse> updateRecipe(
+            @AuthenticationPrincipal CustomUserDetail userDetails,
             @PathVariable String recipeId,
             @RequestBody RecipePostRequest request)
     {
@@ -56,14 +69,16 @@ public class RecipeController {
 
     //================== List =================
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<RecipeListResponse>> getRecipeList(@PathVariable String userId){
-        List<RecipeListResponse> response = recipeService.getRecipeList(userId);
+    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
+    public ResponseEntity<List<RecipeListResponse>> getRecipeList(@AuthenticationPrincipal CustomUserDetail userDetails){
+        List<RecipeListResponse> response = recipeService.getRecipeList(userDetails.getUserId());
         return ResponseEntity.ok(response);
     }
 
     //================== detail =================
     @GetMapping("/{recipeId}")
-    public ResponseEntity<RecipeDetailResponse> getRecipeDetail(@PathVariable String recipeId){
+    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
+    public ResponseEntity<RecipeDetailResponse> getRecipeDetail(@PathVariable String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails){
         RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId);
         return ResponseEntity.ok(response);
 
@@ -72,7 +87,8 @@ public class RecipeController {
 
     //================== delete =================
     @DeleteMapping("/{recipeId}")
-    public ResponseEntity<?> deleteRecipe(@PathVariable String recipeId) {
+    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
+    public ResponseEntity<?> deleteRecipe(@PathVariable String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails) {
         try {
             recipeService.deleteRecipe(recipeId);
             return ResponseEntity.noContent().build();
@@ -80,5 +96,17 @@ public class RecipeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         }
+    }
+    /**
+     * 유저가 검색하고 싶은 재료 ID들로 레시피 조회
+     * - 반환 빈 값 "" 가능. (JS ES6에서 ""는 falsy)
+     */
+    @PostMapping("/search")
+    public ResponseEntity<Map<RecipeListResponseDTO, Integer>> findRecipesByIngredientIds(
+            @RequestBody RecipeSearchByIngredientsRequestDTO recipeSearchByIngredientsRequestDTO) {
+        List<Integer> ingredientIds = recipeSearchByIngredientsRequestDTO.getIngredientIds();
+        List<String> ingredientNames = ingredientService.findNamesByIds(ingredientIds);
+        Map<RecipeListResponseDTO, Integer> result = userIngredientService.recommendWithMatchCount(ingredientNames);
+        return ResponseEntity.ok(result);
     }
 }

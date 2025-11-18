@@ -7,7 +7,6 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "useringredient")
 @Data
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class UserIngredient {
@@ -18,14 +17,14 @@ public class UserIngredient {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_useringredient_user"))
+                foreignKey = @ForeignKey(name = "fk_useringredient_user"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("ingredientId")
     @JoinColumn(name = "ingredient_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_useringredient_ingredient"))
+                foreignKey = @ForeignKey(name = "fk_useringredient_ingredient"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Ingredient ingredient;
 }

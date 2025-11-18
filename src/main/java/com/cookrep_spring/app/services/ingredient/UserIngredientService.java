@@ -39,19 +39,19 @@ public class UserIngredientService {
     public List<UserIngredientAddResponseDTO> addIngredients(String userId, String[] ingredientNames) {
         // 1️⃣ 유저 존재 여부 검증
         userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
+                      .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
 
         // 2️⃣ 이미 등록된 재료들 미리 조회
         List<Ingredient> existingIngredients = ingredientRepository.findByNameIn(List.of(ingredientNames));
         Set<String> existingNames = existingIngredients.stream()
-                .map(Ingredient::getName)
-                .collect(Collectors.toSet());
+                                                       .map(Ingredient::getName)
+                                                       .collect(Collectors.toSet());
 
         // 3️⃣ DB에 없는 재료들만 새로 생성
         List<Ingredient> newIngredients = Arrays.stream(ingredientNames)
-                .filter(name -> !existingNames.contains(name))
-                .map(name -> Ingredient.builder().name(name).build())
-                .toList();
+                                                .filter(name -> !existingNames.contains(name))
+                                                .map(name -> Ingredient.builder().name(name).build())
+                                                .toList();
         ingredientRepository.saveAll(newIngredients);
 
         // 4️⃣ 전체 재료 목록 = 기존 + 신규
@@ -61,24 +61,24 @@ public class UserIngredientService {
 
         // 5️⃣ 유저 냉장고에 이미 등록된 재료 제외
         List<Integer> alreadyHasIds = userIngredientRepository.findIngredientsByUser_UserId(userId)
-                .stream()
-                .map(Ingredient::getIngredientId)
-                .toList();
+                                                              .stream()
+                                                              .map(Ingredient::getIngredientId)
+                                                              .toList();
 
         List<UserIngredient> newUserIngredients = allIngredients.stream()
-                .filter(i -> !alreadyHasIds.contains(i.getIngredientId()))
-                .map(i -> UserIngredient.builder()
-                        .id(new UserIngredientPK(userId, i.getIngredientId()))
-                        .user(userRepository.getReferenceById(userId))
-                        .ingredient(i)
-                        .build())
-                .toList();
+                                                                .filter(i -> !alreadyHasIds.contains(i.getIngredientId()))
+                                                                .map(i -> UserIngredient.builder()
+                                                                                        .id(new UserIngredientPK(userId, i.getIngredientId()))
+                                                                                        .user(userRepository.getReferenceById(userId))
+                                                                                        .ingredient(i)
+                                                                                        .build())
+                                                                .toList();
 
         userIngredientRepository.saveAll(newUserIngredients);
 
         return allIngredients.stream()
-                .map(UserIngredientAddResponseDTO::from)
-                .toList();
+                             .map(UserIngredientAddResponseDTO::from)
+                             .toList();
     }
 
     /**
@@ -87,8 +87,8 @@ public class UserIngredientService {
     @Transactional
     public void deleteByUserIdAndIngredientId(String userId, int ingredientId) {
         UserIngredient userIngredient = userIngredientRepository
-                .findByUser_UserIdAndIngredient_IngredientId(userId, ingredientId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 재료가 냉장고에 없습니다."));
+            .findByUser_UserIdAndIngredient_IngredientId(userId, ingredientId)
+            .orElseThrow(() -> new EntityNotFoundException("해당 재료가 냉장고에 없습니다."));
         userIngredientRepository.delete(userIngredient);
     }
 
@@ -102,9 +102,9 @@ public class UserIngredientService {
         }
 
         return userIngredientRepository.findIngredientsByUser_UserId(userId)
-                .stream()
-                .map(UserIngredientResponseDTO::from)
-                .toList();
+                                       .stream()
+                                       .map(UserIngredientResponseDTO::from)
+                                       .toList();
     }
 
     // TODO: 유저 냉장고의 재료로 레시피 검색 기능을 레시피 서비스로 이동
@@ -127,10 +127,10 @@ public class UserIngredientService {
             Long matchCount = recipeDTO.getMatchCount();
 
             String url = recipe.getThumbnailImageUrl();
-            if (url != null && !url.startsWith("https://")) {
-                // Presigned URL 로직은 나중에 S3Service 붙이기
-                // url = presigner.generatePresignedUrls(url);
-            }
+            // TODO: S3Service 구현 후 Presigned URL 생성 로직 추가 필요
+            // if (url != null && !url.startsWith("https://")) {
+            //     url = presigner.generatePresignedUrls(url);
+            // }
 
             RecipeListResponseDTO dto = RecipeListResponseDTO.from(recipe);
             result.put(dto, matchCount.intValue());

@@ -1,0 +1,34 @@
+
+server:  
+  port: 8080  
+spring:
+  jwt:
+   access-secret:
+   refresh-secret:
+  application:  
+    name: cookrep_spring  
+  datasource:  
+    url: jdbc:mysql://localhost:3306/cookrep?characterEncoding=utf8&serverTimezone=Asia/Seoul  
+    username: 여기에 아이디  
+    password: 여기에 비밀번호   
+    driver-class-name: com.mysql.cj.jdbc.Driver  
+    hikari:  
+      minimum-idle: 5 # 최소 커넥션   
+      maximum-pool-size: 10 # 최대 커넥션   
+      connection-timeout: 30000 # 30초 이상 대기시 에러  
+  jpa:  
+    hibernate:  
+      ddl-auto: update
+    show_sql: true
+    properties:  
+      hibernate:  
+        format_sql: true  
+        use_sql_comments: true  
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        
+mybatis:
+  mapper-locations: classpath:mapper/*/.xml
+  type-aliases-package: com.example.cookrep.model
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false

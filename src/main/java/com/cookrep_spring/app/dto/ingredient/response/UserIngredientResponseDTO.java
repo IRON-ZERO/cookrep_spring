@@ -19,10 +19,10 @@ public class UserIngredientResponseDTO {
 
     public static UserIngredientResponseDTO from(Ingredient ingredient) {
         return UserIngredientResponseDTO.builder()
-                .ingredientId(ingredient.getIngredientId())
-                .name(ingredient.getName())
-                .createdAt(ingredient.getCreatedAt())
-                .build();
+                                        .ingredientId(ingredient.getIngredientId())
+                                        .name(ingredient.getName())
+                                        .createdAt(ingredient.getCreatedAt())
+                                        .build();
     }
 
 }

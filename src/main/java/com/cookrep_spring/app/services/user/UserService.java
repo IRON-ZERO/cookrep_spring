@@ -31,7 +31,7 @@ public class UserService {
      */
     public UserDetailResponse getUserDetail(String id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
+                                  .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         return UserDetailResponse.from(user);
     }
 
@@ -41,7 +41,7 @@ public class UserService {
     @Transactional
     public UserUpdateResponse update(UserUpdateRequest userInput) {
         User user = userRepository.findById(userInput.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
+                                  .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
 
         if (userInput.getFirstName() != null) user.setFirstName(userInput.getFirstName());
         if (userInput.getLastName() != null) user.setLastName(userInput.getLastName());
@@ -57,7 +57,7 @@ public class UserService {
     @Transactional
     public void deleteById(String userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
+                                  .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         userRepository.delete(user);
     }
 
@@ -69,18 +69,18 @@ public class UserService {
         if (!userRepository.existsById(userId)) {
             throw new EntityNotFoundException("유저를 찾을 수 없습니다.");
         }
-        // [2] scraped recipes 목록 조회
+        // [2] 스크랩 여부 확인을 위한 레시피 ID 목록 조회
         List<String> scrappedIds = scrapRepository.findRecipeIdsByUserId(userId);
         Set<String> scrappedSet = new HashSet<>(scrappedIds);
 
         // [3] 레시피와 스크랩 여부 반환
         return recipeRepository.findByUser_UserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(recipe -> RecipeListResponseDTO.of(
-                        recipe,
-                        scrappedSet.contains(recipe.getRecipeId())
-                ))
-                .toList();
+                               .stream()
+                               .map(recipe -> RecipeListResponseDTO.of(
+                                       recipe,
+                                       scrappedSet.contains(recipe.getRecipeId())
+                               ))
+                               .toList();
     }
 
     /**
@@ -91,8 +91,8 @@ public class UserService {
             throw new EntityNotFoundException("유저를 찾을 수 없습니다.");
         }
         return scrapRepository.findRecipesByUserId(userId)
-                .stream()
-                .map(recipe->RecipeListResponseDTO.of(recipe, true))
-                .toList();
+                              .stream()
+                              .map(recipe->RecipeListResponseDTO.of(recipe, true))
+                              .toList();
     }
 }

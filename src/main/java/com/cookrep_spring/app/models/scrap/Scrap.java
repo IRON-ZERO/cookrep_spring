@@ -24,16 +24,16 @@ public class Scrap{
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "user_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "fk_scrap_user"))
+                nullable = false,
+                foreignKey = @ForeignKey(name = "fk_scrap_user"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne
     @MapsId("recipeId")
     @JoinColumn(name = "recipe_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "fk_scrap_recipe"))
+                nullable = false,
+                foreignKey = @ForeignKey(name = "fk_scrap_recipe"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Recipe recipe;
 

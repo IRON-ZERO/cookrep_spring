@@ -15,3 +15,4 @@ public class RecipeIngredientPK implements Serializable {
     private String recipeId;
     private Integer ingredientId;
 }
+

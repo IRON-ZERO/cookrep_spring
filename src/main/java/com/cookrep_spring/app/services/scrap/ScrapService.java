@@ -24,15 +24,15 @@ public class ScrapService {
     // 스크랩 등록
     public Scrap scrapRecipe(String userId, String recipeId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
+                                  .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new EntityNotFoundException("레시피를 찾을 수 없습니다."));
+                                        .orElseThrow(() -> new EntityNotFoundException("레시피를 찾을 수 없습니다."));
 
         Scrap scrap = Scrap.builder()
-                .id(new ScrapPK(userId, recipeId))
-                .user(user)
-                .recipe(recipe)
-                .build();
+                           .id(new ScrapPK(userId, recipeId))
+                           .user(user)
+                           .recipe(recipe)
+                           .build();
 
         return scrapRepository.save(scrap);
     }
@@ -40,7 +40,7 @@ public class ScrapService {
     // 스크랩 취소
     public void cancelScrap(String userId, String recipeId) {
         Scrap scrap = scrapRepository.findById(new ScrapPK(userId, recipeId))
-                .orElseThrow(() -> new EntityNotFoundException("스크랩이 존재하지 않습니다."));
+                                     .orElseThrow(() -> new EntityNotFoundException("스크랩이 존재하지 않습니다."));
         scrapRepository.delete(scrap);
     }
 

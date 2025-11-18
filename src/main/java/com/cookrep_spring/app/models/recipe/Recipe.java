@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "recipe")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
