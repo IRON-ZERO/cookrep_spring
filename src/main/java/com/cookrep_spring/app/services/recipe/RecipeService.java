@@ -155,7 +155,7 @@ public class RecipeService {
                 .filter(ri -> dtoIngredients.stream()
                         .noneMatch(di -> di.getName().equals(ri.getIngredient().getName())))
                 .map(ri -> ri.getIngredient().getName())
-                .toList();
+                .collect(Collectors.toList());
 
         for (String name : namesToDelete) {
             // 부분 삭제

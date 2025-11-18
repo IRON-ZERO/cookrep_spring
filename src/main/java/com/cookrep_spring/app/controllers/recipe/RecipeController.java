@@ -61,7 +61,6 @@ public class RecipeController {
             @PathVariable String recipeId,
             @RequestBody RecipePostRequest request)
     {
-//        request.setRecipeId(recipeId);
         RecipeUpdateResponse response = recipeService.updateRecipe(recipeId, request);
         return ResponseEntity.ok(response);
     }

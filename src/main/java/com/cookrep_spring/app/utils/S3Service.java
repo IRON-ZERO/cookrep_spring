@@ -87,7 +87,7 @@ public class S3Service {
                     .build();
 
             s3Client.deleteObject(deleteRequest);
-            System.out.println("S3 object deleted: " + key);
+            log.error("S3 object not found: {}", keyOrUrl);
 
         } catch (NoSuchKeyException e) {
             System.out.println("❌ S3 object not found: " + keyOrUrl);

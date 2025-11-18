@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredient, RecipeIngredientPK> {
@@ -24,7 +23,6 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
 
 
     @Modifying
-    @Transactional
     @Query("DELETE FROM RecipeIngredient ri WHERE ri.recipe.recipeId = :recipeId AND ri.ingredient.name = :name")
     void deleteByRecipeIdAndIngredientName(@Param("recipeId") String recipeId, @Param("name") String name);
 
