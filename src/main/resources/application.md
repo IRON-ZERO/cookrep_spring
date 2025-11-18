@@ -1,6 +1,8 @@
-
 server:  
-  port: 8080  
+  port: 8080
+api:
+  url:http://openapi.foodsafetykorea.go.kr/api/
+  key:  
 spring:
   jwt:
    access-secret:
