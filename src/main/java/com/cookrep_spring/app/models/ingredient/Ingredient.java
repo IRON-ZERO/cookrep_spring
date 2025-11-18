@@ -5,7 +5,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Ingredient")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder

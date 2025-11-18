@@ -1,15 +1,11 @@
 package com.cookrep_spring.app.models.user;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "User")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,10 +16,12 @@ public class User {
     @Column(name = "user_id", length = 36, nullable = false, updatable = false)
     private String userId;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
     @Column(name = "nickname", length = 20, nullable = false, unique = true)
@@ -65,4 +63,3 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 }
-

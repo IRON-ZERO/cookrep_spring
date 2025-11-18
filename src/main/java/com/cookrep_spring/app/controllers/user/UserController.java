@@ -30,7 +30,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserIngredientService userIngredientService;
-    private final IngredientService ingredientService;
+
     private final ScrapService scrapService;
 
     /**
@@ -146,17 +146,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 유저가 검색하고 싶은 재료 ID들로 레시피 조회
-     * - 반환 빈 값 "" 가능. (JS ES6에서 ""는 falsy)
-     */
-    @PostMapping("/search-recipes")
-    public ResponseEntity<Map<RecipeListResponseDTO, Integer>> findRecipesByIngredientIds(
-        @RequestBody RecipeSearchByIngredientsRequestDTO recipeSearchByIngredientsRequestDTO) {
-        List<Integer> ingredientIds = recipeSearchByIngredientsRequestDTO.getIngredientIds();
-        List<String> ingredientNames = ingredientService.findNamesByIds(ingredientIds);
-        Map<RecipeListResponseDTO, Integer> result = userIngredientService.recommendWithMatchCount(ingredientNames);
-        return ResponseEntity.ok(result);
-    }
+
 
 }

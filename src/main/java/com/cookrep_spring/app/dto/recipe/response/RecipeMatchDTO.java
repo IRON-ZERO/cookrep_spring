@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.dto.recipe.response;
 
-import com.cookrep_spring.app.models.Recipe;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

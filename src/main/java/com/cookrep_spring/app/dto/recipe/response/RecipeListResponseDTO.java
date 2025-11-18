@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.dto.recipe.response;
 
-import com.cookrep_spring.app.models.Recipe;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import lombok.*;
 
 @Getter
@@ -25,30 +25,30 @@ public class RecipeListResponseDTO {
 
     public static RecipeListResponseDTO of(Recipe recipe, boolean scrapped) {
         return RecipeListResponseDTO.builder()
-                                    .recipeId(recipe.getRecipeId())
-                                    .title(recipe.getTitle())
-                                    .thumbnailImageUrl(recipe.getThumbnailImageUrl())
-                                    .views(recipe.getViews())
-                                    .peopleCount(recipe.getPeopleCount())
-                                    .prepTime(recipe.getPrepTime())
-                                    .cookTime(recipe.getCookTime())
-                                    .likesCount(recipe.getLikesCount())
-                                    .kcal(recipe.getKcal())
-                                    .isScrapped(scrapped)
-                                    .build();
+                .recipeId(recipe.getRecipeId())
+                .title(recipe.getTitle())
+                .thumbnailImageUrl(recipe.getThumbnailImageUrl())
+                .views(recipe.getViews())
+                .peopleCount(recipe.getPeopleCount())
+                .prepTime(recipe.getPrepTime())
+                .cookTime(recipe.getCookTime())
+                .likesCount(recipe.getLikesCount())
+                .kcal(recipe.getKcal())
+                .isScrapped(scrapped)
+                .build();
     }
     public static RecipeListResponseDTO from(Recipe recipe) {
         return RecipeListResponseDTO.builder()
-                                    .recipeId(recipe.getRecipeId())
-                                    .title(recipe.getTitle())
-                                    .thumbnailImageUrl(recipe.getThumbnailImageUrl())
-                                    .views(recipe.getViews())
-                                    .peopleCount(recipe.getPeopleCount())
-                                    .prepTime(recipe.getPrepTime())
-                                    .cookTime(recipe.getCookTime())
-                                    .likesCount(recipe.getLikesCount())
-                                    .kcal(recipe.getKcal())
-                                    .build();
+                .recipeId(recipe.getRecipeId())
+                .title(recipe.getTitle())
+                .thumbnailImageUrl(recipe.getThumbnailImageUrl())
+                .views(recipe.getViews())
+                .peopleCount(recipe.getPeopleCount())
+                .prepTime(recipe.getPrepTime())
+                .cookTime(recipe.getCookTime())
+                .likesCount(recipe.getLikesCount())
+                .kcal(recipe.getKcal())
+                .build();
     }
     public String getCookLevel() {
         int pTime = getPrepTime();

@@ -4,7 +4,7 @@ import com.cookrep_spring.app.dto.ingredient.response.UserIngredientAddResponseD
 import com.cookrep_spring.app.dto.ingredient.response.UserIngredientResponseDTO;
 import com.cookrep_spring.app.dto.recipe.response.RecipeMatchDTO;
 import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
-import com.cookrep_spring.app.models.Recipe;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredientPK;

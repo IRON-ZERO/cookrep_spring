@@ -10,6 +10,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@Builder
 public class RecipeIngredientPK implements Serializable {
     private String recipeId;
     private Integer ingredientId;

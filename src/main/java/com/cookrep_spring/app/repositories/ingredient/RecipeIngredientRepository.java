@@ -4,9 +4,9 @@ import com.cookrep_spring.app.dto.recipe.response.RecipeMatchDTO;
 import com.cookrep_spring.app.models.ingredient.RecipeIngredient;
 import com.cookrep_spring.app.models.ingredient.RecipeIngredientPK;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 
 public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredient, RecipeIngredientPK> {
@@ -19,4 +19,12 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
     ORDER BY COUNT(i.ingredientId) DESC, ri.recipe.views DESC
 """)
     List<RecipeMatchDTO> findRecipesWithMatchCount(@Param("ingredientNames") List<String> ingredientNames);
+    List<RecipeIngredient> findByRecipe_RecipeId(String recipeId);
+
+
+    @Modifying
+    @Query("DELETE FROM RecipeIngredient ri WHERE ri.recipe.recipeId = :recipeId AND ri.ingredient.name = :name")
+    void deleteByRecipeIdAndIngredientName(@Param("recipeId") String recipeId, @Param("name") String name);
+
+
 }

@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.models.scrap;
 
-import com.cookrep_spring.app.models.Recipe;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import com.cookrep_spring.app.models.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,6 @@
 package com.cookrep_spring.app.repositories.scrap;
 
-import com.cookrep_spring.app.models.Recipe;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import com.cookrep_spring.app.models.scrap.Scrap;
 import com.cookrep_spring.app.models.scrap.ScrapPK;
 import org.springframework.data.jpa.repository.JpaRepository;
