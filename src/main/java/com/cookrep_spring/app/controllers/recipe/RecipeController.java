@@ -24,7 +24,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/recipe")
 @RequiredArgsConstructor
-//@CrossOrigin(origins = "http://localhost:5173")
 public class RecipeController {
     private final RecipeService recipeService;
     private final IngredientService ingredientService;
@@ -45,7 +44,7 @@ public class RecipeController {
 
     // 클라이언트에서 s3 업로드 완료 후, db에 최종 업로드 api
     @PostMapping("/{userId}")
-    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
+    @PreAuthorize("#userId == #userDetails.userId")
     public ResponseEntity<RecipeUpdateResponse> registerRecipe(
             @AuthenticationPrincipal CustomUserDetail userDetails,
             @RequestBody RecipePostRequest request)
@@ -69,7 +68,7 @@ public class RecipeController {
 
     //================== List =================
     @GetMapping("/user/{userId}")
-    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
+    @PreAuthorize("#userId == #userDetails.userId")
     public ResponseEntity<List<RecipeListResponse>> getRecipeList(@AuthenticationPrincipal CustomUserDetail userDetails){
         List<RecipeListResponse> response = recipeService.getRecipeList(userDetails.getUserId());
         return ResponseEntity.ok(response);

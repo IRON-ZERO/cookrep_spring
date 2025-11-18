@@ -36,7 +36,6 @@ public class RecipeService {
     private final RecipeStepsRepository recipeStepsRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
-    private S3Client s3Client;
     private final IngredientRepository ingredientRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
 
@@ -342,7 +341,7 @@ public class RecipeService {
             }
         } catch (Exception e) {
             // S3 삭제 실패 시 DB 삭제는 절대 진행하지 않고 바로 예외 발생
-            e.printStackTrace();
+            log.error("S3 삭제 실패로 레시피 삭제 중단: {}", recipeId, e);
             throw new RuntimeException("S3 삭제 실패로 레시피 삭제 중단: " + recipeId, e);
         }
 

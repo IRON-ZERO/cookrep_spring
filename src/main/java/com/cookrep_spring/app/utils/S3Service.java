@@ -1,7 +1,10 @@
 package com.cookrep_spring.app.utils;
 
+import com.cookrep_spring.app.config.AwsS3Config;
 import com.cookrep_spring.app.exceptions.S3ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -21,15 +24,17 @@ import java.util.stream.Collectors;
 public class S3Service {
 
     private final S3Presigner presigner;
-    private final String BUCKET_NAME = "cookrepbucket";
+    private final String bucket;
     private final S3Client s3Client;
+    private static final Logger log = LoggerFactory.getLogger(S3Service.class);
+
 
     //=========== 업로드용 서명된 url 발급 =============
     // 여러 파일에 대한 Presigned URL 발급
     public List<Map<String, String>> generatePresignedUrls(List<String> fileNames) {
         return fileNames.stream().map(fileName -> {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
+                    .bucket(bucket)
                     .key(fileName)
                     .build();
 
@@ -51,7 +56,7 @@ public class S3Service {
     public List<Map<String, String>> generateDownloadPresignedUrls(List<String> fileNames) {
         return fileNames.stream().map(fileName -> {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
+                    .bucket(bucket)
                     .key(fileName)
                     .build();
 
@@ -77,7 +82,7 @@ public class S3Service {
 
             // S3 삭제 요청 생성
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
+                    .bucket(bucket)
                     .key(key)
                     .build();
 
@@ -88,8 +93,7 @@ public class S3Service {
             System.out.println("❌ S3 object not found: " + keyOrUrl);
             throw new S3ObjectNotFoundException("삭제할 수 없습니다. S3 객체가 존재하지 않습니다: " + keyOrUrl);
         } catch (S3Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("S3 삭제 실패: " + keyOrUrl, e);
+            log.error("S3 삭제 실패: {}", keyOrUrl, e);
         } catch (Exception e) {
             throw new RuntimeException("S3 삭제 중 예외 발생: " + keyOrUrl, e);
         }
@@ -103,9 +107,9 @@ public class S3Service {
             try {
                 URI uri = new URI(keyOrUrl);
                 String path = uri.getPath(); // "/bucket-name/folder/file.png"
-                int index = path.indexOf(BUCKET_NAME + "/");
+                int index = path.indexOf(bucket + "/");
                 if (index >= 0) {
-                    return path.substring(index + BUCKET_NAME.length() + 1);
+                    return path.substring(index + bucket.length() + 1);
                 }
                 return path.startsWith("/") ? path.substring(1) : path;
             } catch (URISyntaxException e) {

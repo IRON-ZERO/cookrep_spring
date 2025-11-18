@@ -49,4 +49,9 @@ public class AwsS3Config {
     public String getBucket() {
         return bucket;
     }
+
+    @Bean
+    public String s3Bucket() {
+        return bucket;
+    }
 }
