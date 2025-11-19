@@ -1,18 +1,20 @@
 package com.cookrep_spring.app.services.openAPIservice;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.cookrep_spring.app.dto.openAPI.CookRcpResponse;
 import com.cookrep_spring.app.dto.openAPI.OpenAPIDto;
 
-import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -35,15 +37,20 @@ public class OpenAPIService {
 		return collect;
 	}
 
-	public List<OpenAPIDto> getOpenAPIRecipeDetail(String rcpName) {
-		return getOpenAPIRecipeDetailRequest(rcpName);
-
-	}
-
+	//Mono로 리턴
 	private List<OpenAPIDto> getOpenAPIRecipeList(String start_index, String end_index) {
 		String formattedString = String.format("/COOKRCP01/json/%s/%s", start_index, end_index);
 		String API_URL = baseURL + apiKey + formattedString;
-		CookRcpResponse response = webClient.get().uri(API_URL).retrieve().bodyToMono(CookRcpResponse.class).block();
+		CookRcpResponse response = webClient.get().uri(API_URL).retrieve()
+			// 1) HTTP 4xx 에러 처리
+			.onStatus(HttpStatusCode::is4xxClientError, clientResponse -> clientResponse.bodyToMono(String.class)
+				.flatMap(body -> Mono.error(new RuntimeException("클라이언트 오류: " + body))))
+
+			// 2) HTTP 5xx 에러 처리
+			.onStatus(HttpStatusCode::is5xxServerError, clientResponse -> clientResponse.bodyToMono(String.class)
+				.flatMap(body -> Mono.error(new RuntimeException("서버 오류: " + body))))
+
+			.bodyToMono(CookRcpResponse.class).block();
 		if (response == null ||
 			response.getCOOKRCP01() == null ||
 			response.getCOOKRCP01().getRow() == null) {
@@ -52,14 +59,4 @@ public class OpenAPIService {
 		return response.getCOOKRCP01().getRow();
 	}
 
-	private List<OpenAPIDto> getOpenAPIRecipeDetailRequest(String rcpName) {
-		String API_URL = baseURL + apiKey + "/COOKRCP01/json/1/1" + "/RCP_NM=" + rcpName;
-		CookRcpResponse response = webClient.get().uri(API_URL).retrieve().bodyToMono(CookRcpResponse.class).block();
-		if (response == null ||
-			response.getCOOKRCP01() == null ||
-			response.getCOOKRCP01().getRow() == null) {
-			return Collections.emptyList();
-		}
-		return response.getCOOKRCP01().getRow();
-	}
 }

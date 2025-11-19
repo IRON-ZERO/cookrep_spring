@@ -36,10 +36,4 @@ public class OpenAPIController {
 		return ResponseEntity.ok(openAPIRecipeList);
 	}
 
-	@GetMapping("/open/getApiRecipeDe/{rcpName}")
-	public ResponseEntity<List<OpenAPIDto>> getOpenAPIRecipeDetail(@PathVariable("rcpName")
-	String rcpName) {
-		List<OpenAPIDto> openAPIRecipeDetail = openAPIService.getOpenAPIRecipeDetail(rcpName);
-		return ResponseEntity.ok(openAPIRecipeDetail);
-	}
 }
