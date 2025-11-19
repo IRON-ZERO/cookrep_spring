@@ -1,10 +1,12 @@
 package com.cookrep_spring.app.controllers.recipe;
 
+import com.cookrep_spring.app.dto.recipe.request.RecipeLikeRequestDTO;
 import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsRequestDTO;
 import com.cookrep_spring.app.dto.recipe.response.*;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.ingredient.IngredientService;
 import com.cookrep_spring.app.services.ingredient.UserIngredientService;
+import com.cookrep_spring.app.services.recipe.RecipeLikeService;
 import com.cookrep_spring.app.services.recipe.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
@@ -27,6 +29,8 @@ public class RecipeController {
     private final UserIngredientService userIngredientService;
 
     private final S3Service s3Service;
+    private final RecipeLikeService recipeLikeService;
+
 
     //================== upload =================
     //s3 서명된 url 생성 api
@@ -38,6 +42,7 @@ public class RecipeController {
         List<Map<String , String>> urls = s3Service.generatePresignedUrls(fileNames);
         return ResponseEntity.ok(urls);
     }
+
 
     // 클라이언트에서 s3 업로드 완료 후, db에 최종 업로드 api
     @PostMapping("/{userId}")
@@ -64,7 +69,6 @@ public class RecipeController {
 
     //================== List =================
     @GetMapping("/user/{userId}")
-    @PreAuthorize("#userId == #userDetails.userId")
     public ResponseEntity<List<RecipeListResponse>> getRecipeList(@AuthenticationPrincipal CustomUserDetail userDetails){
         List<RecipeListResponse> response = recipeService.getRecipeList(userDetails.getUserId());
         return ResponseEntity.ok(response);
@@ -72,9 +76,11 @@ public class RecipeController {
 
     //================== detail =================
     @GetMapping("/{recipeId}")
-    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
-    public ResponseEntity<RecipeDetailResponse> getRecipeDetail(@PathVariable String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails){
-        RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId);
+    public ResponseEntity<RecipeDetailResponse> getRecipeDetail(
+            @PathVariable String recipeId,
+            @AuthenticationPrincipal CustomUserDetail userDetails)
+    {
+        RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId, userDetails);
         return ResponseEntity.ok(response);
 
     }
@@ -105,5 +111,30 @@ public class RecipeController {
         String userId = userDetails.getUserId();
         List<RecipeRecommendationResponseDTO> result = recipeService.recommendWithMatchCount(ingredientNames,userId);
         return ResponseEntity.ok(result);
+    }
+
+    // =============== toggleLike (좋아요 추가/삭제) =================
+    @PostMapping("/like/{recipeId}")
+    public ResponseEntity<RecipeLikeResponseDTO> recipeLikeToggle(
+            @AuthenticationPrincipal CustomUserDetail userDetails,
+            @PathVariable String recipeId
+    ) {
+        RecipeLikeRequestDTO request = RecipeLikeRequestDTO.builder()
+                .recipeId(recipeId)
+                .userId(userDetails.getUserId())
+                .build();
+
+        RecipeLikeResponseDTO response = recipeLikeService.toggleLike(request);
+        return ResponseEntity.ok(response);
+    }
+
+
+    // =============== 특정 레시피 좋아요 누른 사용자 전체 조회 =================
+    @GetMapping("/like/{recipeId}")
+    public ResponseEntity<List<RecipeLikeUserResponseDTO>> getUsersWhoLikedRecipe(
+            @PathVariable String recipeId) {
+
+        List<RecipeLikeUserResponseDTO> users = recipeLikeService.getUsersWhoLikedRecipe(recipeId);
+        return ResponseEntity.ok(users);
     }
 }

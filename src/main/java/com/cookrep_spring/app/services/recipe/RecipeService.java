@@ -13,11 +13,13 @@ import com.cookrep_spring.app.repositories.ingredient.RecipeIngredientRepository
 import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeStepsRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
+import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.scrap.ScrapService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -297,7 +299,7 @@ public class RecipeService {
 
     // =============== Detail =================
     @Transactional(readOnly = true)
-    public RecipeDetailResponse getRecipeDetail(String recipeId) {
+    public RecipeDetailResponse getRecipeDetail(String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails) {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not Found"));
 
@@ -312,7 +314,6 @@ public class RecipeService {
 
         // Step 목록 조회
         List<RecipeSteps> steps = recipeStepsRepository.findByRecipe_RecipeIdOrderByStepOrderAsc(recipeId);
-
         List<StepResponse> stepResponses = steps.stream()
                 .map(step -> {
                     String imageKey = step.getImageUrl();
@@ -331,9 +332,8 @@ public class RecipeService {
                 .sorted(Comparator.comparingInt(StepResponse::getStepOrder))
                 .collect(Collectors.toList());
 
-        // Ingredient 목록 조회 (추가 부분)
+        // Ingredient 목록 조회
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe_RecipeId(recipeId);
-
         List<IngredientRecipeResponse> ingredientResponses = recipeIngredients.stream()
                 .map(ri -> IngredientRecipeResponse.builder()
                         .name(ri.getIngredient().getName())
@@ -344,13 +344,18 @@ public class RecipeService {
         // 작성자 닉네임
         String authorNickname = recipe.getUser() != null ? recipe.getUser().getNickname() : "unknown";
 
+        // 로그인 사용자 ID
+        String currentUserId = userDetails != null ? userDetails.getUserId() : null;
+
         return RecipeDetailResponse.from(
                 recipe.toBuilder().thumbnailImageUrl(thumbnailUrl).build(),
-                ingredientResponses,   // 이제 실제 재료 리스트 전달
+                ingredientResponses,
                 stepResponses,
-                authorNickname
+                authorNickname,
+                currentUserId // isOwner 비교용
         );
     }
+
 
 
 

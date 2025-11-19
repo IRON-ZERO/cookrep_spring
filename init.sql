@@ -12,7 +12,9 @@ CREATE TABLE user (
                       country VARCHAR(50),
                       city VARCHAR(50),
                       email VARCHAR(100) NOT NULL UNIQUE,
-                      password VARCHAR(90)
+                      password VARCHAR(90),
+                      refresh_token VARCHAR(512),
+                      refresh_token_id VARCHAR(100)
 );
 
 -- 재료 테이블
