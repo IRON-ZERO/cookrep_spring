@@ -21,22 +21,23 @@ public class RecipeListResponseDTO {
     private int cookTime;
     private int likesCount;
     private int kcal;
-    private boolean isScrapped;
+    private boolean scrapped;
 
-    public static RecipeListResponseDTO of(Recipe recipe, boolean scrapped) {
+    public static RecipeListResponseDTO of(Recipe recipe, boolean isScrapped) {
         return RecipeListResponseDTO.builder()
-                .recipeId(recipe.getRecipeId())
-                .title(recipe.getTitle())
-                .thumbnailImageUrl(recipe.getThumbnailImageUrl())
-                .views(recipe.getViews())
-                .peopleCount(recipe.getPeopleCount())
-                .prepTime(recipe.getPrepTime())
-                .cookTime(recipe.getCookTime())
-                .likesCount(recipe.getLikesCount())
-                .kcal(recipe.getKcal())
-                .isScrapped(scrapped)
-                .build();
+                                    .recipeId(recipe.getRecipeId())
+                                    .title(recipe.getTitle())
+                                    .thumbnailImageUrl(recipe.getThumbnailImageUrl())
+                                    .views(recipe.getViews())
+                                    .peopleCount(recipe.getPeopleCount())
+                                    .prepTime(recipe.getPrepTime())
+                                    .cookTime(recipe.getCookTime())
+                                    .likesCount(recipe.getLikesCount())
+                                    .kcal(recipe.getKcal())
+                                    .scrapped(isScrapped)
+                                    .build();
     }
+
     public static RecipeListResponseDTO from(Recipe recipe) {
         return RecipeListResponseDTO.builder()
                 .recipeId(recipe.getRecipeId())
@@ -50,6 +51,7 @@ public class RecipeListResponseDTO {
                 .kcal(recipe.getKcal())
                 .build();
     }
+
     public String getCookLevel() {
         int pTime = getPrepTime();
         int cTime = getCookTime();

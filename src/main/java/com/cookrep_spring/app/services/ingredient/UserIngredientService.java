@@ -2,9 +2,6 @@ package com.cookrep_spring.app.services.ingredient;
 
 import com.cookrep_spring.app.dto.ingredient.response.UserIngredientAddResponseDTO;
 import com.cookrep_spring.app.dto.ingredient.response.UserIngredientResponseDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeMatchDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
-import com.cookrep_spring.app.models.recipe.Recipe;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredient;
 import com.cookrep_spring.app.models.ingredient.UserIngredientPK;
@@ -107,35 +104,4 @@ public class UserIngredientService {
                                        .toList();
     }
 
-    // TODO: 유저 냉장고의 재료로 레시피 검색 기능을 레시피 서비스로 이동
-    /**
-     * 냉장고 재료 기반 레시피 추천
-     * - key: RecipeListResponseDTO
-     * - value: 일치 재료 수
-     */
-    public Map<RecipeListResponseDTO, Integer> recommendWithMatchCount(List<String> ingredientNames) {
-        Map<RecipeListResponseDTO, Integer> result = new LinkedHashMap<>();
-
-        if (ingredientNames == null || ingredientNames.isEmpty()) {
-            return result; // 빈 Map 반환
-        }
-
-        List<RecipeMatchDTO> queryResult = recipeIngredientRepository.findRecipesWithMatchCount(ingredientNames);
-
-        for (RecipeMatchDTO recipeDTO : queryResult) {
-            Recipe recipe = recipeDTO.getRecipe();
-            Long matchCount = recipeDTO.getMatchCount();
-
-            String url = recipe.getThumbnailImageUrl();
-            // TODO: S3Service 구현 후 Presigned URL 생성 로직 추가 필요
-            // if (url != null && !url.startsWith("https://")) {
-            //     url = presigner.generatePresignedUrls(url);
-            // }
-
-            RecipeListResponseDTO dto = RecipeListResponseDTO.from(recipe);
-            result.put(dto, matchCount.intValue());
-        }
-
-        return result;
-    }
 }

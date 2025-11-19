@@ -3,15 +3,16 @@ package com.cookrep_spring.app.controllers.user;
 import com.cookrep_spring.app.dto.ingredient.request.UserIngredientAddRequestDTO;
 import com.cookrep_spring.app.dto.ingredient.response.UserIngredientAddResponseDTO;
 import com.cookrep_spring.app.dto.ingredient.response.UserIngredientResponseDTO;
-import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsRequestDTO;
 import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
 import com.cookrep_spring.app.dto.scrap.request.ScrapAddRequestDTO;
 import com.cookrep_spring.app.dto.user.request.UserUpdateRequest;
 import com.cookrep_spring.app.dto.user.response.UserDetailResponse;
 import com.cookrep_spring.app.dto.user.response.UserUpdateResponse;
 import com.cookrep_spring.app.security.CustomUserDetail;
+import com.cookrep_spring.app.utils.Util;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.cookrep_spring.app.services.ingredient.IngredientService;
 import com.cookrep_spring.app.services.ingredient.UserIngredientService;
 import com.cookrep_spring.app.services.scrap.ScrapService;
 import com.cookrep_spring.app.services.user.UserService;
@@ -21,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -59,9 +59,13 @@ public class UserController {
      * 유저 삭제
      */
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal CustomUserDetail userDetails) {
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal CustomUserDetail userDetails, HttpServletResponse response) {
         String userId = userDetails.getUserId();
         userService.deleteById(userId);
+        Cookie access = Util.buildCookie(Util.ACCESS_TOKEN, null, 0);
+        Cookie refresh = Util.buildCookie(Util.REFRESH_TOKEN, null, 0);
+        response.addCookie(access);
+        response.addCookie(refresh);
         return ResponseEntity.noContent().build();
     }
 
@@ -84,12 +88,11 @@ public class UserController {
                                                                                  @RequestBody UserIngredientAddRequestDTO ingredientAddRequestDTO) {
         String userId = userDetails.getUserId();
         String[] ingredientNames = ingredientAddRequestDTO.getIngredientNames();
+
         if (ingredientNames == null || ingredientNames.length == 0) {
             return ResponseEntity.badRequest().body(null);
         }
-        if (ingredientNames == null || ingredientNames.length == 0) {
-            return ResponseEntity.badRequest().body(null);
-        }
+
         List<UserIngredientAddResponseDTO> result = userIngredientService.addIngredients(userId, ingredientNames);
         return ResponseEntity.ok(result);
     }
