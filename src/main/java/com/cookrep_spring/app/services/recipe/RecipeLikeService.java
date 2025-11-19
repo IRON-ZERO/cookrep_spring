@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,71 +32,67 @@ public class RecipeLikeService {
         String recipeId = dto.getRecipeId();
         String userId = dto.getUserId();
 
-        // Recipe 와 User 엔티티 조회
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(()-> new RuntimeException("레시피를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
         User user = userRepository.findById(userId)
-                .orElseThrow(()->new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        // 좋아요 이미 눌렀는지 확인
-        // 좋아요가 존재하면 그 객체를 바로 삭제하거나 다른 정보를 활용 가능
-        Optional<RecipeLike> existingLike = recipeLikeRepository.findByRecipe_RecipeIdAndUser_UserId(recipeId, userId);
+        Optional<RecipeLike> existingLike =
+                recipeLikeRepository.findByRecipe_RecipeIdAndUser_UserId(recipeId, userId);
 
-        // 이미 좋아요 누른 상태면,
-        if (existingLike.isPresent()){
-           // 좋아요 삭제 (취소)
+        // 이미 좋아요 누른 상태 → 삭제
+        if (existingLike.isPresent()) {
             recipeLikeRepository.delete(existingLike.get());
+            recipeRepository.decreaseLike(recipeId); // ⬅ DB에서 직접 감소
 
-            // recipe 엔티티 likeCount 감소
-            recipe.setLikesCount(Math.max(0, recipe.getLikesCount() -1 )); // 음수 방지
-            recipeRepository.save(recipe);
+            int updatedCount = recipeRepository.findById(recipeId)
+                    .map(Recipe::getLikesCount)
+                    .orElse(0);
 
             return RecipeLikeResponseDTO.builder()
                     .status("success")
                     .message("좋아요가 취소되었습니다.")
                     .recipeId(recipeId)
                     .userId(userId)
-                    .likeCount(recipe.getLikesCount())
-                    .build();
-        } else {
-            // 좋아요 추가
-            RecipeLike recipeLike = new RecipeLike();
-            recipeLike.setRecipe(recipe);
-            recipeLike.setUser(user);
-            recipeLikeRepository.save(recipeLike);
-
-            // recipe 엔티티 likesCount 증가
-            recipe.setLikesCount(recipe.getLikesCount() + 1);
-            recipeRepository.save(recipe);
-
-            return RecipeLikeResponseDTO.builder()
-                    .status("success")
-                    .message("좋아요가 등록되었습니다.")
-                    .recipeId(recipeId)
-                    .userId(userId)
-                    .likeCount(recipe.getLikesCount())
+                    .likeCount(updatedCount)
                     .build();
         }
+
+        // 좋아요 추가
+        RecipeLike recipeLike = new RecipeLike();
+        recipeLike.setRecipe(recipe);
+        recipeLike.setUser(user);
+        recipeLikeRepository.save(recipeLike);
+
+        recipeRepository.increaseLike(recipeId); // ⬅ DB에서 직접 증가
+
+        int updatedCount = recipeRepository.findById(recipeId)
+                .map(Recipe::getLikesCount)
+                .orElse(0);
+
+        return RecipeLikeResponseDTO.builder()
+                .status("success")
+                .message("좋아요가 등록되었습니다.")
+                .recipeId(recipeId)
+                .userId(userId)
+                .likeCount(updatedCount)
+                .build();
     }
 
     // =============== 특정 레시피 좋아요 누른 사용자 전체 조회 =================
-    @Transactional
+    @Transactional(readOnly = true)
     public List<RecipeLikeUserResponseDTO> getUsersWhoLikedRecipe(String recipeId) {
-        // Recipe 엔티티 조회
-        Recipe recipe = recipeRepository.findById(recipeId)
+
+        recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
 
-        // RecipeLike 엔티티 리스트 조회 후 User → DTO 변환
-        List<RecipeLikeUserResponseDTO> users = recipeLikeRepository.findByRecipe_RecipeId(recipeId)
+        return recipeLikeRepository.findByRecipe_RecipeId(recipeId)
                 .stream()
-                .map(RecipeLike::getUser) // RecipeLike에서 User 추출
+                .map(RecipeLike::getUser)
                 .map(user -> RecipeLikeUserResponseDTO.builder()
                         .userId(user.getUserId())
-                        .nickname(user.getNickname()) // User 엔티티 필드
+                        .nickname(user.getNickname())
                         .build())
                 .toList();
-
-        return users;
     }
-
 }

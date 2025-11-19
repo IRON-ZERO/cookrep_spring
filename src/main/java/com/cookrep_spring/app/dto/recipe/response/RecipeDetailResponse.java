@@ -51,7 +51,7 @@ public class RecipeDetailResponse {
                 .updatedAt(recipe.getUpdatedAt())
                 .ingredients(ingredients)
                 .steps(steps)
-                .isOwner(recipe.getUser().getUserId().equals(currentUserId))
+                .isOwner(currentUserId != null && recipe.getUser().getUserId().equals(currentUserId))
                 .build();
     }
 }

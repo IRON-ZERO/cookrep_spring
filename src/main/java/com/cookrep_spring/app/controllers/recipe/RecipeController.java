@@ -115,18 +115,19 @@ public class RecipeController {
 
     // =============== toggleLike (좋아요 추가/삭제) =================
     @PostMapping("/like/{recipeId}")
-    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
     public ResponseEntity<RecipeLikeResponseDTO> recipeLikeToggle(
             @AuthenticationPrincipal CustomUserDetail userDetails,
-            @PathVariable String recipeId,
-            @RequestBody RecipeLikeRequestDTO request)
-    {
-        request.setRecipeId(recipeId);           // URL에서 넘어온 recipeId로 덮어쓰기
-        request.setUserId(userDetails.getUserId()); // 인증된 사용자 ID로 덮어쓰기
+            @PathVariable String recipeId
+    ) {
+        RecipeLikeRequestDTO request = RecipeLikeRequestDTO.builder()
+                .recipeId(recipeId)
+                .userId(userDetails.getUserId())
+                .build();
 
         RecipeLikeResponseDTO response = recipeLikeService.toggleLike(request);
         return ResponseEntity.ok(response);
     }
+
 
     // =============== 특정 레시피 좋아요 누른 사용자 전체 조회 =================
     @GetMapping("/like/{recipeId}")

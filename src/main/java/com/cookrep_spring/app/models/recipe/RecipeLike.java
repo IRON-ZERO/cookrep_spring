@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.tool.schema.spi.SchemaTruncator;
-
 import java.time.LocalDateTime;
 
 // 하나의 유저가 한 레시피에 1번만 좋아요 — 중복 방지 가능 (unique 제약)
