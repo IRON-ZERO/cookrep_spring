@@ -1,16 +1,13 @@
 package com.cookrep_spring.app.controllers.recipe;
 
 import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsRequestDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeListResponse;
-import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
+import com.cookrep_spring.app.dto.recipe.response.*;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.ingredient.IngredientService;
 import com.cookrep_spring.app.services.ingredient.UserIngredientService;
 import com.cookrep_spring.app.services.recipe.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
-import com.cookrep_spring.app.dto.recipe.response.RecipeDetailResponse;
-import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,11 +97,13 @@ public class RecipeController {
      * - 반환 빈 값 "" 가능. (JS ES6에서 ""는 falsy)
      */
     @PostMapping("/search")
-    public ResponseEntity<Map<RecipeListResponseDTO, Integer>> findRecipesByIngredientIds(
-            @RequestBody RecipeSearchByIngredientsRequestDTO recipeSearchByIngredientsRequestDTO) {
+    public ResponseEntity<List<RecipeRecommendationResponseDTO>> findRecipesByIngredientIds(
+            @RequestBody RecipeSearchByIngredientsRequestDTO recipeSearchByIngredientsRequestDTO,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
         List<Integer> ingredientIds = recipeSearchByIngredientsRequestDTO.getIngredientIds();
         List<String> ingredientNames = ingredientService.findNamesByIds(ingredientIds);
-        Map<RecipeListResponseDTO, Integer> result = userIngredientService.recommendWithMatchCount(ingredientNames);
+        String userId = userDetails.getUserId();
+        List<RecipeRecommendationResponseDTO> result = recipeService.recommendWithMatchCount(ingredientNames,userId);
         return ResponseEntity.ok(result);
     }
 }
