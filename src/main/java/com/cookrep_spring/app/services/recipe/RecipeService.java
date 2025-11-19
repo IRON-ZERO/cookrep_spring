@@ -279,7 +279,7 @@ public class RecipeService {
 
                 String thumbnailKey = recipe.getThumbnailImageUrl();
                 String thumbnailUrl = null;
-                if (thumbnailKey != null&&!thumbnailKey.isEmpty()) {
+                if (thumbnailKey != null && !thumbnailKey.isEmpty()) {
                     thumbnailUrl = s3Service.generateDownloadPresignedUrls(List.of(thumbnailKey))
                                             .get(0)
                                             .get("downloadUrl");
