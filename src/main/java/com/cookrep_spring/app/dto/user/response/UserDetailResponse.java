@@ -1,6 +1,5 @@
 package com.cookrep_spring.app.dto.user.response;
 
-
 import com.cookrep_spring.app.models.user.User;
 import lombok.Builder;
 import lombok.Data;

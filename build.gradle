@@ -34,6 +34,13 @@ dependencies {
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // aws
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/s3
+    implementation("software.amazon.awssdk:s3:2.36.0")
+
+    // lombok
 	// jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
@@ -48,6 +55,9 @@ dependencies {
 	// aws 
 	implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.529')
   implementation 'com.amazonaws:aws-java-sdk-s3'
+
+    // .env파일 로드
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
@@ -57,6 +67,8 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+    // Gradle 테스트 실행 시 작업 디렉토리를 프로젝트 루트로 지정
+    workingDir = projectDir
 }
 
 
