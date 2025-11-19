@@ -20,6 +20,7 @@ public class RecipeDetailResponse {
     private int peopleCount;
     private int prepTime;
     private int cookTime;
+    private boolean isOwner; // 작성자 여부
     private String authorNickname;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -32,7 +33,8 @@ public class RecipeDetailResponse {
             Recipe recipe,
             List<IngredientRecipeResponse> ingredients,
             List<StepResponse> steps,
-            String authorNickname
+            String authorNickname,
+            String currentUserId //로그인 사용자 ID
     ) {
         return RecipeDetailResponse.builder()
                 .recipeId(recipe.getRecipeId())
@@ -49,6 +51,7 @@ public class RecipeDetailResponse {
                 .updatedAt(recipe.getUpdatedAt())
                 .ingredients(ingredients)
                 .steps(steps)
+                .isOwner(recipe.getUser().getUserId().equals(currentUserId))
                 .build();
     }
 }
