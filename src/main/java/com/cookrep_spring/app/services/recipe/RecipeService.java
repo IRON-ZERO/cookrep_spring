@@ -1,8 +1,7 @@
 package com.cookrep_spring.app.services.recipe;
 
 import com.cookrep_spring.app.dto.ingredient.response.IngredientRecipeResponse;
-import com.cookrep_spring.app.dto.recipe.response.RecipeListResponse;
-import com.cookrep_spring.app.dto.recipe.response.StepResponse;
+import com.cookrep_spring.app.dto.recipe.response.*;
 import com.cookrep_spring.app.models.ingredient.Ingredient;
 import com.cookrep_spring.app.models.ingredient.RecipeIngredient;
 import com.cookrep_spring.app.models.ingredient.RecipeIngredientPK;
@@ -15,16 +14,15 @@ import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeStepsRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
 import com.cookrep_spring.app.security.CustomUserDetail;
+import com.cookrep_spring.app.services.scrap.ScrapService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
-import com.cookrep_spring.app.dto.recipe.response.RecipeDetailResponse;
-import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +38,7 @@ public class RecipeService {
     private final S3Service s3Service;
     private final IngredientRepository ingredientRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
+    private final ScrapService scrapService;
 
     // =============== upload =================
     @Transactional
@@ -257,6 +256,45 @@ public class RecipeService {
                 .toList();
 
 
+    }
+
+    /**
+     * 냉장고 재료 기반 레시피 추천
+     * @param ingredientNames
+     * @param userId
+     * @return List<RecipeRecommendationResponseDTO>
+     */
+    public List<RecipeRecommendationResponseDTO> recommendWithMatchCount(List<String> ingredientNames, String userId) {
+        // 유저 검증
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("유저를 찾을 수 없습니다.");
+        }
+
+        List<RecipeMatchDTO> queryResult = recipeIngredientRepository.findRecipesWithMatchCount(ingredientNames);
+
+        return queryResult
+            .stream()
+            .map(recipeMatchDTO -> {
+                Recipe recipe = recipeMatchDTO.getRecipe();
+                Long matchCount = recipeMatchDTO.getMatchCount();
+                boolean isScrapped = scrapService.isScrapped(userId, recipe.getRecipeId());
+
+                String thumbnailKey = recipe.getThumbnailImageUrl();
+                String thumbnailUrl = null;
+                if (thumbnailKey != null && !thumbnailKey.isEmpty()) {
+                    thumbnailUrl = s3Service.generateDownloadPresignedUrls(List.of(thumbnailKey))
+                                            .get(0)
+                                            .get("downloadUrl");
+                }
+
+                // 서명된 url로 교체하여 dto 변환
+                Recipe updateRecipe = recipe.toBuilder()
+                                            .thumbnailImageUrl(thumbnailUrl)
+                                            .build();
+                RecipeListResponseDTO recipeListResponseDTO = RecipeListResponseDTO.from(updateRecipe);
+                return RecipeRecommendationResponseDTO.of(recipeListResponseDTO, matchCount, isScrapped);
+            })
+            .toList();
     }
 
     // =============== Detail =================

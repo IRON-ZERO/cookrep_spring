@@ -103,11 +103,13 @@ public class RecipeController {
      * - 반환 빈 값 "" 가능. (JS ES6에서 ""는 falsy)
      */
     @PostMapping("/search")
-    public ResponseEntity<Map<RecipeListResponseDTO, Integer>> findRecipesByIngredientIds(
-            @RequestBody RecipeSearchByIngredientsRequestDTO recipeSearchByIngredientsRequestDTO) {
+    public ResponseEntity<List<RecipeRecommendationResponseDTO>> findRecipesByIngredientIds(
+            @RequestBody RecipeSearchByIngredientsRequestDTO recipeSearchByIngredientsRequestDTO,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
         List<Integer> ingredientIds = recipeSearchByIngredientsRequestDTO.getIngredientIds();
         List<String> ingredientNames = ingredientService.findNamesByIds(ingredientIds);
-        Map<RecipeListResponseDTO, Integer> result = userIngredientService.recommendWithMatchCount(ingredientNames);
+        String userId = userDetails.getUserId();
+        List<RecipeRecommendationResponseDTO> result = recipeService.recommendWithMatchCount(ingredientNames,userId);
         return ResponseEntity.ok(result);
     }
 
