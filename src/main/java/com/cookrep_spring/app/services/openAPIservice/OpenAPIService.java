@@ -28,16 +28,32 @@ public class OpenAPIService {
 		return getOpenAPIRecipeList(start_index, end_index);
 	}
 
-	public List<OpenAPIDto> getOpenAPIRecipeDescList(String start_index, String end_index) {
+	public List<OpenAPIDto> getOpenAPIRecipeSortDescList(String start_index, String end_index) {
 		List<OpenAPIDto> list = getOpenAPIRecipeList(start_index, end_index);
 		List<OpenAPIDto> collect = list.stream().sorted(Comparator.comparing(OpenAPIDto::getRcpSeo).reversed())
 			.collect(Collectors.toList());
 		return collect;
 	}
 
+	public List<OpenAPIDto> getOpenAPIRecipeDetail(String rcpName) {
+		return getOpenAPIRecipeDetailRequest(rcpName);
+
+	}
+
 	private List<OpenAPIDto> getOpenAPIRecipeList(String start_index, String end_index) {
 		String formattedString = String.format("/COOKRCP01/json/%s/%s", start_index, end_index);
 		String API_URL = baseURL + apiKey + formattedString;
+		CookRcpResponse response = webClient.get().uri(API_URL).retrieve().bodyToMono(CookRcpResponse.class).block();
+		if (response == null ||
+			response.getCOOKRCP01() == null ||
+			response.getCOOKRCP01().getRow() == null) {
+			return Collections.emptyList();
+		}
+		return response.getCOOKRCP01().getRow();
+	}
+
+	private List<OpenAPIDto> getOpenAPIRecipeDetailRequest(String rcpName) {
+		String API_URL = baseURL + apiKey + "/COOKRCP01/json/1/1" + "/RCP_NM=" + rcpName;
 		CookRcpResponse response = webClient.get().uri(API_URL).retrieve().bodyToMono(CookRcpResponse.class).block();
 		if (response == null ||
 			response.getCOOKRCP01() == null ||

@@ -28,11 +28,18 @@ public class OpenAPIController {
 		return ResponseEntity.ok(openAPIRecipeList);
 	}
 
-	@GetMapping("/open/getApiRecipeDesc/{startIndex}/{endIndex}")
-	public ResponseEntity<List<OpenAPIDto>> getOpenAPIRecipeDescList(@PathVariable("startIndex")
+	@GetMapping("/open/getApiRecipeSortDesc/{startIndex}/{endIndex}")
+	public ResponseEntity<List<OpenAPIDto>> getOpenAPIRecipeSortDescList(@PathVariable("startIndex")
 	String startIndex, @PathVariable("endIndex")
 	String endIndex) {
-		List<OpenAPIDto> openAPIRecipeList = openAPIService.getOpenAPIRecipeDescList(startIndex, endIndex);
+		List<OpenAPIDto> openAPIRecipeList = openAPIService.getOpenAPIRecipeSortDescList(startIndex, endIndex);
 		return ResponseEntity.ok(openAPIRecipeList);
+	}
+
+	@GetMapping("/open/getApiRecipeDe/{rcpName}")
+	public ResponseEntity<List<OpenAPIDto>> getOpenAPIRecipeDetail(@PathVariable("rcpName")
+	String rcpName) {
+		List<OpenAPIDto> openAPIRecipeDetail = openAPIService.getOpenAPIRecipeDetail(rcpName);
+		return ResponseEntity.ok(openAPIRecipeDetail);
 	}
 }
