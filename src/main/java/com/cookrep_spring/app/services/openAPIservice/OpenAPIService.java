@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -14,7 +13,6 @@ import com.cookrep_spring.app.dto.openAPI.CookRcpResponse;
 import com.cookrep_spring.app.dto.openAPI.OpenAPIDto;
 
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -42,13 +40,13 @@ public class OpenAPIService {
 		String formattedString = String.format("/COOKRCP01/json/%s/%s", start_index, end_index);
 		String API_URL = baseURL + apiKey + formattedString;
 		CookRcpResponse response = webClient.get().uri(API_URL).retrieve()
-			// 1) HTTP 4xx 에러 처리
-			.onStatus(HttpStatusCode::is4xxClientError, clientResponse -> clientResponse.bodyToMono(String.class)
-				.flatMap(body -> Mono.error(new RuntimeException("클라이언트 오류: " + body))))
-
-			// 2) HTTP 5xx 에러 처리
-			.onStatus(HttpStatusCode::is5xxServerError, clientResponse -> clientResponse.bodyToMono(String.class)
-				.flatMap(body -> Mono.error(new RuntimeException("서버 오류: " + body))))
+			//			// 1) HTTP 4xx 에러 처리
+			//			.onStatus(HttpStatusCode::is4xxClientError, clientResponse -> clientResponse.bodyToMono(String.class)
+			//				.flatMap(body -> Mono.error(new RuntimeException("클라이언트 오류: " + body))))
+			//
+			//			// 2) HTTP 5xx 에러 처리
+			//			.onStatus(HttpStatusCode::is5xxServerError, clientResponse -> clientResponse.bodyToMono(String.class)
+			//				.flatMap(body -> Mono.error(new RuntimeException("서버 오류: " + body))))
 
 			.bodyToMono(CookRcpResponse.class).block();
 		if (response == null ||
