@@ -26,7 +26,6 @@ import java.util.Map;
 public class RecipeController {
     private final RecipeService recipeService;
     private final IngredientService ingredientService;
-    private final UserIngredientService userIngredientService;
 
     private final S3Service s3Service;
     private final RecipeLikeService recipeLikeService;
