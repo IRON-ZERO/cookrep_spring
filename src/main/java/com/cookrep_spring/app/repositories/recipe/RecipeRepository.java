@@ -23,6 +23,6 @@ public interface RecipeRepository extends JpaRepository<Recipe, String> {
     void decreaseLike(@Param("id") String id);
 
     @Query("SELECT r.likesCount FROM Recipe r WHERE r.recipeId = :id")
-    int findLikesCountByRecipeId(@Param("id") String recipeId);
+    Integer findLikesCountByRecipeId(@Param("id") String recipeId);
 
 }

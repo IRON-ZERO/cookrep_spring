@@ -48,7 +48,6 @@ public class RecipeLikeService {
 
             recipeRepository.decreaseLike(recipeId); // DB likesCount -1
 
-
             // ← UPDATE 후 다시 DB에서 정확한 likeCount 조회
             int updatedCount = recipeRepository.findLikesCountByRecipeId(recipeId);
 
@@ -72,7 +71,6 @@ public class RecipeLikeService {
 
         recipeRepository.increaseLike(recipeId); // DB likesCount +1
 
-
         // ← UPDATE 후 다시 DB에서 정확한 likeCount 조회
         int updatedCount = recipeRepository.findLikesCountByRecipeId(recipeId);
 
@@ -86,7 +84,6 @@ public class RecipeLikeService {
                 .liked(true)
                 .build();
     }
-
 
 
     // =============== 특정 레시피 좋아요 누른 사용자 전체 조회 =================
