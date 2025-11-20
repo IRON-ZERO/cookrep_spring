@@ -28,9 +28,10 @@ public class RecipeLikeService {
 
     // =============== toggleLike (좋아요 추가/삭제) =================
     @Transactional
-    public RecipeLikeResponseDTO toggleLike(RecipeLikeRequestDTO dto){
+    public RecipeLikeResponseDTO toggleLike(RecipeLikeRequestDTO dto) {
         String recipeId = dto.getRecipeId();
         String userId = dto.getUserId();
+
 
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
@@ -42,12 +43,14 @@ public class RecipeLikeService {
 
         // 이미 좋아요 누른 상태 → 삭제
         if (existingLike.isPresent()) {
-            recipeLikeRepository.delete(existingLike.get());
-            recipeRepository.decreaseLike(recipeId); // ⬅ DB에서 직접 감소
 
-            int updatedCount = recipeRepository.findById(recipeId)
-                    .map(Recipe::getLikesCount)
-                    .orElse(0);
+            recipeLikeRepository.delete(existingLike.get());
+
+            recipeRepository.decreaseLike(recipeId); // DB likesCount -1
+
+            // ← UPDATE 후 다시 DB에서 정확한 likeCount 조회
+            int updatedCount = recipeRepository.findLikesCountByRecipeId(recipeId);
+
 
             return RecipeLikeResponseDTO.builder()
                     .status("success")
@@ -55,6 +58,7 @@ public class RecipeLikeService {
                     .recipeId(recipeId)
                     .userId(userId)
                     .likeCount(updatedCount)
+                    .liked(false)
                     .build();
         }
 
@@ -62,13 +66,14 @@ public class RecipeLikeService {
         RecipeLike recipeLike = new RecipeLike();
         recipeLike.setRecipe(recipe);
         recipeLike.setUser(user);
+
         recipeLikeRepository.save(recipeLike);
 
-        recipeRepository.increaseLike(recipeId); // ⬅ DB에서 직접 증가
+        recipeRepository.increaseLike(recipeId); // DB likesCount +1
 
-        int updatedCount = recipeRepository.findById(recipeId)
-                .map(Recipe::getLikesCount)
-                .orElse(0);
+        // ← UPDATE 후 다시 DB에서 정확한 likeCount 조회
+        int updatedCount = recipeRepository.findLikesCountByRecipeId(recipeId);
+
 
         return RecipeLikeResponseDTO.builder()
                 .status("success")
@@ -76,8 +81,10 @@ public class RecipeLikeService {
                 .recipeId(recipeId)
                 .userId(userId)
                 .likeCount(updatedCount)
+                .liked(true)
                 .build();
     }
+
 
     // =============== 특정 레시피 좋아요 누른 사용자 전체 조회 =================
     @Transactional(readOnly = true)

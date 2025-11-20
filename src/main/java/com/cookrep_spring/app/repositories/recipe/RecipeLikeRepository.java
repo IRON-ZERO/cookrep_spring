@@ -15,4 +15,8 @@ public interface RecipeLikeRepository extends JpaRepository<RecipeLike, Long> {
 
     // 객체 자체 반환 (토글 구현용)
     Optional<RecipeLike> findByRecipe_RecipeIdAndUser_UserId(String recipeId, String userId);
+
+    // 좋아요 등록 시 recipelike 테이블에 업데이트
+
+
 }
