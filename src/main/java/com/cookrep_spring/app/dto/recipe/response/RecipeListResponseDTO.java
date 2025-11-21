@@ -35,6 +35,7 @@ public class RecipeListResponseDTO {
                                     .likesCount(recipe.getLikesCount())
                                     .kcal(recipe.getKcal())
                                     .scrapped(isScrapped)
+                                    .cookLevel(getCookLevel(recipe))
                                     .build();
     }
 
@@ -49,12 +50,13 @@ public class RecipeListResponseDTO {
                 .cookTime(recipe.getCookTime())
                 .likesCount(recipe.getLikesCount())
                 .kcal(recipe.getKcal())
+                .cookLevel(getCookLevel(recipe))
                 .build();
     }
 
-    public String getCookLevel() {
-        int pTime = getPrepTime();
-        int cTime = getCookTime();
+    public static String getCookLevel(Recipe recipe) {
+        int pTime = recipe.getPrepTime();
+        int cTime = recipe.getCookTime();
         String easy = "EASY", normal = "NORMAL", hard = "HARD";
         boolean easyCoast = (pTime < 40 && cTime < 40);
         boolean hardCoast = (pTime > 50 && cTime > 60) || cTime > 100;
