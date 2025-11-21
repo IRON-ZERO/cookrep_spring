@@ -23,4 +23,12 @@ public interface RecipeRepository extends JpaRepository<Recipe, String> {
     @Modifying
     @Query("UPDATE Recipe r SET r.likesCount = r.likesCount - 1 WHERE r.recipeId = :id AND r.likesCount > 0")
     void decreaseLike(@Param("id") String id);
+
+    @Query("SELECT r.likesCount FROM Recipe r WHERE r.recipeId = :id")
+    Integer findLikesCountByRecipeId(@Param("id") String recipeId);
+
+    @Modifying
+    @Query("UPDATE Recipe r SET r.views = r.views + 1 WHERE r.recipeId = :recipeId")
+    int incrementViewsById(@Param("recipeId") String recipeId);
+
 }
