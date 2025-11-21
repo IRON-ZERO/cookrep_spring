@@ -407,24 +407,27 @@ public class RecipeService {
     }
 
 
-    // =============== 조회 수  =================
     @Transactional
     public Map<String, Integer> getRecipeWithViews(String recipeId, CustomUserDetail userDetails, boolean increment) {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not Found"));
 
-        // 조회수 증가 조건: increment=true, 로그인한 유저가 작성자가 아닐 때
         if (increment) {
             String loginUserId = (userDetails != null) ? userDetails.getUserId() : null;
 
-            // 로그인하지 않았거나, 작성자와 다르면 조회수 증가
+            // 로그인하지 않았거나 작성자가 아니면 DB 레벨에서 원자적 증가
             if (loginUserId == null || !recipe.getUser().getUserId().equals(loginUserId)) {
-                recipe.setViews(recipe.getViews() + 1);
+                recipeRepository.incrementViewsById(recipeId);
+
+                // 최신 값 재조회
+                recipe = recipeRepository.findById(recipeId)
+                        .orElseThrow(() -> new RuntimeException("Recipe not Found"));
             }
         }
 
         return Map.of("views", recipe.getViews());
     }
+
 
 
 
