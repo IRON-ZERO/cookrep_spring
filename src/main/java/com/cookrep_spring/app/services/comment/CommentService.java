@@ -8,6 +8,7 @@ import com.cookrep_spring.app.models.user.User;
 import com.cookrep_spring.app.repositories.comment.CommentRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,9 +34,9 @@ public class CommentService {
 
 
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("레시피를 찾을 수 없습니다."));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
 
         //댓글 생성
@@ -63,11 +64,7 @@ public class CommentService {
     @Transactional
     public CommentResponseDTO updateComment(Long commentId, CommentRequestDTO dto, String loginUserId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
-
-
-        System.out.println("comment.userId=" + comment.getUser().getUserId());
-        System.out.println("loginUserId=" + loginUserId);
+                .orElseThrow(() -> new EntityNotFoundException("댓글을 찾을 수 없습니다."));
 
 
         // 작성자만 수정 가능
@@ -93,7 +90,7 @@ public class CommentService {
     @Transactional
     public CommentResponseDTO deleteComment(Long commentId, String userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("댓글을 찾을 수 없습니다."));
 
         // 작성자만 삭제 가능
         if (!comment.getUser().getUserId().equals(userId)) {
@@ -117,7 +114,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponseDTO> getCommentByRecipe(String recipeId, String loginUserId){
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("레시피를 찾을 수 없습니다."));
 
         return commentRepository.findAllByRecipeOrderByCreatedAtDesc(recipe)
                 .stream()

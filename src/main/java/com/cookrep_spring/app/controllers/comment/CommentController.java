@@ -2,19 +2,14 @@ package com.cookrep_spring.app.controllers.comment;
 
 import com.cookrep_spring.app.dto.comment.request.CommentRequestDTO;
 import com.cookrep_spring.app.dto.comment.response.CommentResponseDTO;
-import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
-import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.comment.CommentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/comment")
@@ -45,7 +40,6 @@ public class CommentController {
 
     // ================== 댓글 삭제 ==================
     @DeleteMapping("/{commentId}")
-    @PreAuthorize("#userId == #userDetails.userId")
     public CommentResponseDTO deleteComment(
             @AuthenticationPrincipal CustomUserDetail userDetails,
             @PathVariable Long commentId
