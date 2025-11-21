@@ -5,7 +5,6 @@ import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsReques
 import com.cookrep_spring.app.dto.recipe.response.*;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.ingredient.IngredientService;
-import com.cookrep_spring.app.services.ingredient.UserIngredientService;
 import com.cookrep_spring.app.services.recipe.RecipeLikeService;
 import com.cookrep_spring.app.services.recipe.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
@@ -26,7 +25,6 @@ import java.util.Map;
 public class RecipeController {
     private final RecipeService recipeService;
     private final IngredientService ingredientService;
-    private final UserIngredientService userIngredientService;
 
     private final S3Service s3Service;
     private final RecipeLikeService recipeLikeService;
