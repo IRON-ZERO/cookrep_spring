@@ -49,16 +49,14 @@ public class CommentService {
         commentRepository.save(comment);
 
         // ResponseDTO 생성
-        return CommentResponseDTO.builder()
-                .status("success")
-                .message("댓글이 등록되었습니다.")
-                .commentId(comment.getCommentId())
-                .recipeId(recipeId)
-                .userId(userId)
-                .contents(contents)
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .build();
+        return CommentResponseDTO.from(
+                comment,
+                "success",
+                "댓글이 등록되었습니다.",
+                userId,
+                recipe
+        );
+
     }
 
     // =============== comment update =================
@@ -80,18 +78,13 @@ public class CommentService {
         comment.setContents(dto.getContents());
         commentRepository.save(comment);
 
-        return CommentResponseDTO.builder()
-                .status("success")
-                .message("댓글이 수정되었습니다.")
-                .commentId(comment.getCommentId())
-                .recipeId(comment.getRecipe().getRecipeId())
-                .userId(comment.getUser().getUserId())
-                .contents(comment.getContents())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .owner(true)
-                .build();
-
+        return CommentResponseDTO.from(
+                comment,
+                "success",
+                "댓글이 수정되었습니다.",
+                loginUserId,
+                comment.getRecipe()
+        );
 
     }
 
@@ -109,17 +102,14 @@ public class CommentService {
 
         commentRepository.delete(comment);
 
-        return CommentResponseDTO.builder()
-                .status("success")
-                .message("댓글이 삭제되었습니다.")
-                .commentId(comment.getCommentId())
-                .recipeId(comment.getRecipe().getRecipeId())
-                .userId(comment.getUser().getUserId())
-                .contents(comment.getContents())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .owner(true)
-                .build();
+        return CommentResponseDTO.from(
+                comment,
+                "success",
+                "댓글이 삭제되었습니다.",
+                userId,
+                comment.getRecipe()
+        );
+
     }
 
     // =============== comment list by recipe =================
@@ -131,18 +121,9 @@ public class CommentService {
 
         return commentRepository.findAllByRecipeOrderByCreatedAtDesc(recipe)
                 .stream()
-                .map(comment -> CommentResponseDTO.builder()
-                        .status("success")
-                        .message("댓글 조회 성공")
-                        .commentId(comment.getCommentId())
-                        .recipeId(recipe.getRecipeId())
-                        .userId(comment.getUser().getUserId())
-                        .contents(comment.getContents())
-                        .createdAt(comment.getCreatedAt())
-                        .updatedAt(comment.getUpdatedAt())
-                        .owner(comment.getUser().getUserId().equals(loginUserId)) // 여기 추가
-                        .build())
+                .map(c -> CommentResponseDTO.from(c, "success", "댓글 조회 성공", loginUserId, recipe))
                 .toList();
+
     }
 
 

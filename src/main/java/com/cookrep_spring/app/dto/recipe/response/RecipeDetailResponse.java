@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class RecipeDetailResponse {
     private String recipeId;
     private String title;
@@ -21,6 +21,7 @@ public class RecipeDetailResponse {
     private int prepTime;
     private int cookTime;
     private boolean isOwner; // 작성자 여부
+    private boolean liked; //
     private String authorNickname;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

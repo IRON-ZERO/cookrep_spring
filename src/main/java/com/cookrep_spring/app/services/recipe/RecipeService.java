@@ -10,6 +10,7 @@ import com.cookrep_spring.app.models.recipe.RecipeSteps;
 import com.cookrep_spring.app.models.user.User;
 import com.cookrep_spring.app.repositories.ingredient.IngredientRepository;
 import com.cookrep_spring.app.repositories.ingredient.RecipeIngredientRepository;
+import com.cookrep_spring.app.repositories.recipe.RecipeLikeRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.recipe.RecipeStepsRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
@@ -39,6 +40,7 @@ public class RecipeService {
     private final IngredientRepository ingredientRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final ScrapService scrapService;
+    private final RecipeLikeRepository recipeLikeRepository;
 
     // =============== upload =================
     @Transactional
@@ -347,14 +349,23 @@ public class RecipeService {
         // 로그인 사용자 ID
         String currentUserId = userDetails != null ? userDetails.getUserId() : null;
 
+        // 🔹 로그인한 사용자가 좋아요 눌렀는지 확인
+        boolean liked = false;
+        if (currentUserId != null) {
+            liked = recipeLikeRepository.findByRecipe_RecipeIdAndUser_UserId(recipeId, currentUserId).isPresent();
+        }
+
         return RecipeDetailResponse.from(
-                recipe.toBuilder().thumbnailImageUrl(thumbnailUrl).build(),
-                ingredientResponses,
-                stepResponses,
-                authorNickname,
-                currentUserId // isOwner 비교용
-        );
+                        recipe.toBuilder().thumbnailImageUrl(thumbnailUrl).build(),
+                        ingredientResponses,
+                        stepResponses,
+                        authorNickname,
+                        currentUserId // isOwner 비교용
+                ).toBuilder()
+                .liked(liked) // 여기 추가
+                .build();
     }
+
 
 
 
