@@ -5,7 +5,9 @@ import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsReques
 import com.cookrep_spring.app.dto.recipe.response.*;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.ingredient.IngredientService;
+import com.cookrep_spring.app.services.ingredient.UserIngredientService;
 import com.cookrep_spring.app.services.recipe.RecipeLikeService;
+import com.cookrep_spring.app.services.recipe.RecipeSearchService;
 import com.cookrep_spring.app.services.recipe.RecipeService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
@@ -23,8 +25,10 @@ import java.util.Map;
 @RequestMapping("/api/recipe")
 @RequiredArgsConstructor
 public class RecipeController {
-    private final RecipeService recipeService;
-    private final IngredientService ingredientService;
+	private final RecipeService recipeService;
+	private final IngredientService ingredientService;
+	private final UserIngredientService userIngredientService;
+	private final RecipeSearchService recipeSearchService;
 
     private final S3Service s3Service;
     private final RecipeLikeService recipeLikeService;
@@ -146,4 +150,11 @@ public class RecipeController {
         Map<String, Integer> result = recipeService.getRecipeWithViews(recipeId, userDetails, increment);
         return ResponseEntity.ok(result);
     }
+
+
+	@GetMapping("/search/{title}")
+	public ResponseEntity<List<RecipeSearchResultDto>> getRecipeByTitle(@PathVariable("title") String title) {
+		List<RecipeSearchResultDto> recipe = recipeSearchService.getRecipesAsName(title);
+		return ResponseEntity.ok(recipe);
+	}
 }
