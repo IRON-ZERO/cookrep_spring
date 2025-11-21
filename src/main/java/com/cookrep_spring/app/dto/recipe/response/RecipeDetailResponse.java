@@ -21,7 +21,7 @@ public class RecipeDetailResponse {
     private int prepTime;
     private int cookTime;
     private boolean isOwner; // 작성자 여부
-    private boolean liked; //
+    private boolean liked; // 로그인 사용자의 좋아요 여부
     private String authorNickname;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

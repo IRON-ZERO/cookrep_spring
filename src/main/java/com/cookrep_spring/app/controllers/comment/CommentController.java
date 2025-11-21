@@ -20,10 +20,8 @@ public class CommentController {
 
     // ================== 댓글 생성 ==================
     @PostMapping
-    @PreAuthorize("#userId == #userDetails.userId")
     public CommentResponseDTO createComment(
-            @RequestBody CommentRequestDTO dto,
-            @AuthenticationPrincipal CustomUserDetail userDetails){
+            @RequestBody CommentRequestDTO dto){
         return commentService.createComment(dto);
     }
 

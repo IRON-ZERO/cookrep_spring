@@ -73,7 +73,6 @@ public class CommentService {
         }
 
         comment.setContents(dto.getContents());
-        commentRepository.save(comment);
 
         return CommentResponseDTO.from(
                 comment,
@@ -99,13 +98,11 @@ public class CommentService {
 
         commentRepository.delete(comment);
 
-        return CommentResponseDTO.from(
-                comment,
-                "success",
-                "댓글이 삭제되었습니다.",
-                userId,
-                comment.getRecipe()
-        );
+        return CommentResponseDTO.builder()
+                .status("success")
+                .message("댓글이 삭제되었습니다.")
+                .commentId(commentId)
+                .build();
 
     }
 
