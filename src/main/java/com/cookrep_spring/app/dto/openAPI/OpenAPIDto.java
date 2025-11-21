@@ -103,7 +103,7 @@ public class OpenAPIDto {
 	private String manualImg08; //	만드는법_이미지_08
 
 	@JsonProperty("MANUAL09")
-	private String MANUAL09;// 만드는법_09
+	private String manual09;// 만드는법_09
 
 	@JsonProperty("MANUAL_IMG09")
 	private String manualImg09; //	만드는법_이미지_09
