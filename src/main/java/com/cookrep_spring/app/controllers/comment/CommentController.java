@@ -5,7 +5,6 @@ import com.cookrep_spring.app.dto.comment.response.CommentResponseDTO;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.comment.CommentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
