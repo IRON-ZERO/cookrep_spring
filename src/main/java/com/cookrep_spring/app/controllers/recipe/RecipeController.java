@@ -3,6 +3,7 @@ package com.cookrep_spring.app.controllers.recipe;
 import com.cookrep_spring.app.dto.recipe.request.RecipeLikeRequestDTO;
 import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsRequestDTO;
 import com.cookrep_spring.app.dto.recipe.response.*;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.ingredient.IngredientService;
 import com.cookrep_spring.app.services.ingredient.UserIngredientService;
@@ -135,5 +136,16 @@ public class RecipeController {
 
         List<RecipeLikeUserResponseDTO> users = recipeLikeService.getUsersWhoLikedRecipe(recipeId);
         return ResponseEntity.ok(users);
+    }
+
+    // =============== 레시피 조회 및 조회 수 증가 =================
+    @GetMapping("/countview/{recipeId}")
+    public ResponseEntity<Map<String, Integer>> getRecipeViews(
+            @PathVariable String recipeId,
+            @RequestParam(required = false, defaultValue = "true") boolean increment,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
+
+        Map<String, Integer> result = recipeService.getRecipeWithViews(recipeId, userDetails, increment);
+        return ResponseEntity.ok(result);
     }
 }
