@@ -40,39 +40,69 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			|| path.equals("/");
 	}
 
+	//	@Override
+	//	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	//		throws ServletException, IOException {
+	//		String accessToken = jwtTokenProvider.resolveAccessToken(request);
+	//		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
+	//
+	//		if (accessToken == null || !jwtTokenProvider.validateAccessToken(accessToken)) {
+	//			if (refreshToken == null) {
+	//				sendUnauthorized(response, "인증정보가 없습니다. 다시 로그인해주세요.");
+	//				return;
+	//			}
+	//			if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+	//				sendUnauthorized(response, "토큰이 만료되었습니다. 다시 로그인해주세요.");
+	//				return;
+	//			}
+	//			String userId = jwtTokenProvider.getUserIdByRefresh(refreshToken);
+	//			String refreshTokenId = jwtTokenProvider.getRefreshTokenId(refreshToken);
+	//			String userRefreshId = authService.getRefreshId(userId);
+	//			if (!refreshTokenId.equals(userRefreshId)) {
+	//				sendUnauthorized(response, "인증되지 않는 토큰입니다. 다시 로그인해주세요.");
+	//				this.clearRefreshToken(userId, response);
+	//				return;
+	//			}
+	//			String newAccessToken = jwtTokenProvider.refreshingAccessToken(refreshToken);
+	//			Cookie accessCookie = Util.buildCookie(Util.ACCESS_TOKEN, newAccessToken, 60 * 60 * 5);
+	//			response.addCookie(accessCookie);
+	//			setAuthentication(newAccessToken);
+	//		} else {
+	//			if (jwtTokenProvider.validateAccessToken(accessToken)) {
+	//				setAuthentication(accessToken);
+	//			}
+	//
+	//		}
+	//		filterChain.doFilter(request, response);
+	//	}
+
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
+
 		String accessToken = jwtTokenProvider.resolveAccessToken(request);
 		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
 
-		if (accessToken == null || !jwtTokenProvider.validateAccessToken(accessToken)) {
-			if (refreshToken == null) {
-				sendUnauthorized(response, "인증정보가 없습니다. 다시 로그인해주세요.");
-				return;
-			}
-			if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-				sendUnauthorized(response, "토큰이 만료되었습니다. 다시 로그인해주세요.");
-				return;
-			}
-			String userId = jwtTokenProvider.getUserIdByRefresh(refreshToken);
-			String refreshTokenId = jwtTokenProvider.getRefreshTokenId(refreshToken);
-			String userRefreshId = authService.getRefreshId(userId);
-			if (!refreshTokenId.equals(userRefreshId)) {
-				sendUnauthorized(response, "인증되지 않는 토큰입니다. 다시 로그인해주세요.");
-				this.clearRefreshToken(userId, response);
-				return;
-			}
-			String newAccessToken = jwtTokenProvider.refreshingAccessToken(refreshToken);
-			Cookie accessCookie = Util.buildCookie(Util.ACCESS_TOKEN, newAccessToken, 60 * 60 * 5);
-			response.addCookie(accessCookie);
-			setAuthentication(newAccessToken);
-		} else {
-			if (jwtTokenProvider.validateAccessToken(accessToken)) {
+		try {
+			if (accessToken != null && jwtTokenProvider.validateAccessToken(accessToken)) {
 				setAuthentication(accessToken);
+			} else if (refreshToken != null && jwtTokenProvider.validateRefreshToken(refreshToken)) {
+				String userId = jwtTokenProvider.getUserIdByRefresh(refreshToken);
+				String newAccessToken = jwtTokenProvider.refreshingAccessToken(refreshToken);
+				Cookie accessCookie = Util.buildCookie(Util.ACCESS_TOKEN, newAccessToken, 60 * 60 * 5);
+				response.addCookie(accessCookie);
+				setAuthentication(newAccessToken);
 			}
-
+			// 로그인 안 되어도 여기서는 그냥 통과
+		} catch (Exception e) {
+			// 기존에는 sendUnauthorized로 401을 보내지만 /check일 경우만 무시
+			if (!request.getRequestURI().equals("/api/check")) {
+				sendUnauthorized(response, e.getMessage());
+				return;
+			}
+			// /api/check는 로그인 안 되어도 통과
 		}
+
 		filterChain.doFilter(request, response);
 	}
 
