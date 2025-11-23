@@ -30,6 +30,7 @@ public class RecipeSearchService {
 			.views(r.getViews())
 			.peopleCount(r.getPeopleCount())
 			.prepTime(r.getPrepTime())
+			.cookTime(r.getCookTime())
 			.likesCount(r.getLikesCount())
 			.kcal(r.getKcal())
 			.build();

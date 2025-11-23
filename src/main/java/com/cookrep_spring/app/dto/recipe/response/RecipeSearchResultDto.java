@@ -33,11 +33,11 @@ public class RecipeSearchResultDto {
 
   private String calculateCookLevel(int pTime, int cTime) {
     String easy = "EASY", normal = "NORMAL", hard = "HARD";
-    boolean easyCoast = (pTime < 40 && cTime < 40);
-    boolean hardCoast = (pTime > 50 && cTime > 60) || cTime > 100;
-    if (easyCoast) {
+    boolean easyCost = (pTime < 40 && cTime < 40);
+    boolean hardCost = (pTime > 50 && cTime > 60) || cTime > 100;
+    if (easyCost) {
       return easy;
-    } else if (hardCoast) {
+    } else if (hardCost) {
       return hard;
     }
     return normal;
