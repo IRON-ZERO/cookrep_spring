@@ -30,7 +30,7 @@ public class SecurityConfiguration {
 			.authorizeHttpRequests(
 				auth -> auth
 					.requestMatchers("/", "/api/loginByNickname", "/api/loginByEmail", "/api/join", "/api/check", "/api/open/**",
-						"/api/recipe/countview/**")
+						"/api/recipe/countview/**", "/api/recipe/search/bytitle/*", "/api/recipe/search/bytitle")
 					.permitAll()
 					.anyRequest().authenticated())
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
