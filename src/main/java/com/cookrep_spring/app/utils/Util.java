@@ -16,7 +16,7 @@ public class Util {
 	public static Cookie buildCookie(String cookieName, String value, int maxAge) {
 		Cookie cookie = new Cookie(cookieName, value);
 		cookie.setHttpOnly(true);
-		cookie.setSecure(true);
+		cookie.setSecure(false);
 		cookie.setPath("/");
 		cookie.setMaxAge(maxAge);
 		return cookie;
