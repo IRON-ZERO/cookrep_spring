@@ -86,14 +86,6 @@ public class RecipeController {
 		return ResponseEntity.ok(response);
 	}
 
-	//================== List =================
-	@GetMapping("/user/{userId}")
-	public ResponseEntity<List<RecipeListResponse>> getRecipeList(@AuthenticationPrincipal
-	CustomUserDetail userDetails) {
-		List<RecipeListResponse> response = recipeService.getRecipeList(userDetails.getUserId());
-		return ResponseEntity.ok(response);
-	}
-
 	//================== detail =================
 	@GetMapping("/{recipeId}")
 	public ResponseEntity<RecipeDetailResponse> getRecipeDetail(
@@ -105,6 +97,14 @@ public class RecipeController {
 		return ResponseEntity.ok(response);
 
 	}
+
+    // =============== 레시피 조회 및 조회 수 증가 =================
+    @PostMapping("/{recipeId}/view")
+    public Map<String, Integer> increaseView(
+            @PathVariable String recipeId,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
+        return recipeService.getRecipeWithViews(recipeId, userDetails);
+    }
 
 	//================== delete =================
 	@DeleteMapping("/{recipeId}")
@@ -164,19 +164,6 @@ public class RecipeController {
 		return ResponseEntity.ok(users);
 	}
 
-	// =============== 레시피 조회 및 조회 수 증가 =================
-	@GetMapping("/countview/{recipeId}")
-	public ResponseEntity<Map<String, Integer>> getRecipeViews(
-		@PathVariable
-		String recipeId,
-		@RequestParam(required = false, defaultValue = "true")
-		boolean increment,
-		@AuthenticationPrincipal
-		CustomUserDetail userDetails) {
-
-		Map<String, Integer> result = recipeService.getRecipeWithViews(recipeId, userDetails, increment);
-		return ResponseEntity.ok(result);
-	}
 
 	@GetMapping("/search/{title}")
 	public ResponseEntity<List<RecipeSearchResultDto>> getRecipeByTitle(@PathVariable("title")

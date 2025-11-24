@@ -227,38 +227,6 @@ public class RecipeService {
                 .build();
     }
 
-    // =============== List All =================
-    @Transactional(readOnly = true)
-    public List<RecipeListResponse> getRecipeList(String userId){
-        // 1. 유저 검증
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // 2. 해당 유저가 작성한 레시피 목록 조회
-        List<Recipe> recipes = recipeRepository.findByUser(user);
-
-        // 3. 썸네일 URL 변환 및 Presigned URL 생성
-        return recipes.stream()
-                .map(recipe -> {
-                    String thumbnailKey = recipe.getThumbnailImageUrl();
-                    String thumbnailUrl = null;
-                    if(thumbnailKey != null && !thumbnailKey.isEmpty()){
-                        thumbnailUrl = s3Service.generateDownloadPresignedUrls(List.of(thumbnailKey))
-                                .get(0)
-                                .get("downloadUrl");
-                    }
-
-                    // 서명된 url로 교체하여 dto 변환
-                    Recipe updateRecipe = recipe.toBuilder()
-                            .thumbnailImageUrl(thumbnailUrl)
-                            .build();
-
-                    return RecipeListResponse.from(updateRecipe);
-                })
-                .toList();
-
-
-    }
 
     /**
      * 냉장고 재료 기반 레시피 추천
@@ -300,10 +268,15 @@ public class RecipeService {
     }
 
     // =============== Detail =================
-    @Transactional(readOnly = true)
-    public RecipeDetailResponse getRecipeDetail(String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails) {
+    @Transactional(readOnly = true) // 조회만 하므로 readOnly
+    public RecipeDetailResponse getRecipeDetail(String recipeId,
+                                                CustomUserDetail userDetails) {
+
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not Found"));
+
+        // 조회수는 DB에서 직접 가져오기
+        int currentViews = recipeRepository.findViewsById(recipeId);
 
         // 썸네일 Presigned URL
         String thumbnailKey = recipe.getThumbnailImageUrl();
@@ -363,6 +336,7 @@ public class RecipeService {
                         currentUserId // isOwner 비교용
                 ).toBuilder()
                 .liked(liked) // 여기 추가
+                .views(currentViews)
                 .build();
     }
 
@@ -408,25 +382,24 @@ public class RecipeService {
 
 
     @Transactional
-    public Map<String, Integer> getRecipeWithViews(String recipeId, CustomUserDetail userDetails, boolean increment) {
+    public Map<String, Integer> getRecipeWithViews(String recipeId, CustomUserDetail userDetails) {
+
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not Found"));
 
-        if (increment) {
-            String loginUserId = (userDetails != null) ? userDetails.getUserId() : null;
+        String loginUserId = (userDetails != null) ? userDetails.getUserId() : null;
 
-            // 로그인하지 않았거나 작성자가 아니면 DB 레벨에서 원자적 증가
-            if (loginUserId == null || !recipe.getUser().getUserId().equals(loginUserId)) {
-                recipeRepository.incrementViewsById(recipeId);
-
-                // 최신 값 재조회
-                recipe = recipeRepository.findById(recipeId)
-                        .orElseThrow(() -> new RuntimeException("Recipe not Found"));
-            }
+        // 로그인하지 않았거나 작성자가 아니면 조회수 증가
+        if (loginUserId == null || !recipe.getUser().getUserId().equals(loginUserId)) {
+            recipeRepository.incrementViewsById(recipeId);
         }
 
-        return Map.of("views", recipe.getViews());
+        // 증가된 최신 값 다시 가져오기 (정확한 조회수 반환)
+        int updatedViews = recipeRepository.findViewsById(recipeId);
+
+        return Map.of("views", updatedViews);
     }
+
 
 
 
