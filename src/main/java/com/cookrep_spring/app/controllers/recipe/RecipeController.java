@@ -2,7 +2,12 @@ package com.cookrep_spring.app.controllers.recipe;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import com.cookrep_spring.app.dto.recipe.response.*;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,13 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cookrep_spring.app.dto.recipe.request.RecipeLikeRequestDTO;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
 import com.cookrep_spring.app.dto.recipe.request.RecipeSearchByIngredientsRequestDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeDetailResponse;
-import com.cookrep_spring.app.dto.recipe.response.RecipeLikeResponseDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeLikeUserResponseDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeListResponse;
-import com.cookrep_spring.app.dto.recipe.response.RecipeRecommendationResponseDTO;
-import com.cookrep_spring.app.dto.recipe.response.RecipeSearchResultDto;
-import com.cookrep_spring.app.dto.recipe.response.RecipeUpdateResponse;
 import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.ingredient.IngredientService;
 import com.cookrep_spring.app.services.ingredient.UserIngredientService;
@@ -86,40 +84,44 @@ public class RecipeController {
 		return ResponseEntity.ok(response);
 	}
 
-	//================== detail =================
-	@GetMapping("/{recipeId}")
-	public ResponseEntity<RecipeDetailResponse> getRecipeDetail(
-		@PathVariable
-		String recipeId,
-		@AuthenticationPrincipal
-		CustomUserDetail userDetails) {
-		RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId, userDetails);
-		return ResponseEntity.ok(response);
+    // ================== detail =================
+    @GetMapping("/{recipeId}")
+    public ResponseEntity<RecipeDetailResponse> getRecipeDetail(
+            @PathVariable String recipeId,
+            @AuthenticationPrincipal CustomUserDetail userDetails) {
 
-	}
+        RecipeDetailResponse response = recipeService.getRecipeDetail(recipeId, userDetails);
+        return ResponseEntity.ok(response);
+    }
 
     // =============== 레시피 조회 및 조회 수 증가 =================
     @PostMapping("/{recipeId}/view")
-    public Map<String, Integer> increaseView(
+    public RecipeViewsResponseDTO increaseView(
             @PathVariable String recipeId,
-            @AuthenticationPrincipal CustomUserDetail userDetails) {
-        return recipeService.getRecipeWithViews(recipeId, userDetails);
+            @AuthenticationPrincipal CustomUserDetail userDetails,
+            HttpServletRequest req,
+            HttpServletResponse resp) {
+
+        String viewer = extractOrCreateViewer(req, resp, userDetails);
+        return recipeService.getRecipeWithViews(recipeId, userDetails, viewer);
     }
 
-	//================== delete =================
-	@DeleteMapping("/{recipeId}")
-	@PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
-	public ResponseEntity<?> deleteRecipe(@PathVariable
-	String recipeId, @AuthenticationPrincipal
-	CustomUserDetail userDetails) {
-		try {
-			recipeService.deleteRecipe(recipeId);
-			return ResponseEntity.noContent().build();
-		} catch (RuntimeException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body(Map.of("error", e.getMessage()));
-		}
-	}
+    private String extractOrCreateViewer(HttpServletRequest req, HttpServletResponse resp, CustomUserDetail userDetails) {
+        if (userDetails != null) return userDetails.getUserId();
+
+        if (req.getCookies() != null) {
+            for (Cookie c : req.getCookies()) {
+                if ("sessionId".equals(c.getName())) return c.getValue();
+            }
+        }
+        String sid = UUID.randomUUID().toString();
+        Cookie cookie = new Cookie("sessionId", sid);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(60 * 60 * 24 * 365); // 1년
+        resp.addCookie(cookie);
+        return sid;
+    }
 
 	/**
 	 * 유저가 검색하고 싶은 재료 ID들로 레시피 조회
