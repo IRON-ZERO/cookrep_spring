@@ -170,12 +170,9 @@ public class RecipeController {
 	}
 
 
-	@GetMapping("/search/{title}")
-	public ResponseEntity<List<RecipeSearchResultDto>> getRecipeByTitle(@PathVariable("title")
+	@GetMapping({"/search/bytitle/{title}", "/search/bytitle"})
+	public ResponseEntity<List<RecipeSearchResultDto>> getRecipeByTitle(@PathVariable(value = "title", required = false)
 	String title) {
-		if (title == null || title.isBlank()) {
-			return ResponseEntity.badRequest().build();
-		}
 		List<RecipeSearchResultDto> recipe = recipeSearchService.getRecipesAsName(title);
 		return ResponseEntity.ok(recipe);
 	}
