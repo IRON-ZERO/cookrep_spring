@@ -84,6 +84,19 @@ public class RecipeController {
 		return ResponseEntity.ok(response);
 	}
 
+    //================== delete =================
+    @DeleteMapping("/{recipeId}")
+    @PreAuthorize("@recipeSecurity.isOwner(#recipeId, #userDetails)")
+    public ResponseEntity<?> deleteRecipe(@PathVariable String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails) {
+        try {
+            recipeService.deleteRecipe(recipeId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // ================== detail =================
     @GetMapping("/{recipeId}")
     public ResponseEntity<RecipeDetailResponse> getRecipeDetail(
@@ -104,7 +117,6 @@ public class RecipeController {
 
         String viewer = extractOrCreateViewer(req, resp, userDetails);
 
-        System.out.println("뿅");
 
         return ResponseEntity.ok(recipeService.getRecipeWithViews(recipeId, userDetails, viewer));
     }
