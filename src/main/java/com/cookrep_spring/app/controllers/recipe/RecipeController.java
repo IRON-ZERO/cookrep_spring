@@ -96,14 +96,17 @@ public class RecipeController {
 
     // =============== 레시피 조회 및 조회 수 증가 =================
     @PostMapping("/{recipeId}/view")
-    public RecipeViewsResponseDTO increaseView(
+    public ResponseEntity<RecipeViewsResponseDTO> increaseView(
             @PathVariable String recipeId,
             @AuthenticationPrincipal CustomUserDetail userDetails,
             HttpServletRequest req,
             HttpServletResponse resp) {
 
         String viewer = extractOrCreateViewer(req, resp, userDetails);
-        return recipeService.getRecipeWithViews(recipeId, userDetails, viewer);
+
+        System.out.println("뿅");
+
+        return ResponseEntity.ok(recipeService.getRecipeWithViews(recipeId, userDetails, viewer));
     }
 
     private String extractOrCreateViewer(HttpServletRequest req, HttpServletResponse resp, CustomUserDetail userDetails) {
