@@ -4,10 +4,12 @@ import com.cookrep_spring.app.dto.recipe.response.RecipeListResponseDTO;
 import com.cookrep_spring.app.dto.user.request.UserUpdateRequest;
 import com.cookrep_spring.app.dto.user.response.UserDetailResponse;
 import com.cookrep_spring.app.dto.user.response.UserUpdateResponse;
+import com.cookrep_spring.app.models.recipe.Recipe;
 import com.cookrep_spring.app.models.user.User;
 import com.cookrep_spring.app.repositories.recipe.RecipeRepository;
 import com.cookrep_spring.app.repositories.scrap.ScrapRepository;
 import com.cookrep_spring.app.repositories.user.UserRepository;
+import com.cookrep_spring.app.utils.S3Service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RecipeRepository recipeRepository;
     private final ScrapRepository scrapRepository;
+    private final S3Service s3Service;
 
     /**
      * 유저 상세 조회
@@ -76,10 +79,24 @@ public class UserService {
         // [3] 레시피와 스크랩 여부 반환
         return recipeRepository.findByUser_UserIdOrderByCreatedAtDesc(userId)
                                .stream()
-                               .map(recipe -> RecipeListResponseDTO.of(
-                                       recipe,
-                                       scrappedSet.contains(recipe.getRecipeId())
-                               ))
+                               .map(recipe -> {
+                                   String thumbnailKey = recipe.getThumbnailImageUrl();
+                                   String thumbnailUrl = null;
+                                   if(thumbnailKey != null && !thumbnailKey.isEmpty()){
+                                       thumbnailUrl = s3Service.generateDownloadPresignedUrls(List.of(thumbnailKey))
+                                                               .get(0)
+                                                               .get("downloadUrl");
+                                   }
+
+                                   // 서명된 url로 교체하여 dto 변환
+                                   Recipe updateRecipe = recipe.toBuilder()
+                                                               .thumbnailImageUrl(thumbnailUrl)
+                                                               .build();
+
+                                   return RecipeListResponseDTO.of(
+                                       updateRecipe,
+                                       scrappedSet.contains(updateRecipe.getRecipeId()));
+                               })
                                .toList();
     }
 
@@ -92,7 +109,21 @@ public class UserService {
         }
         return scrapRepository.findRecipesByUserId(userId)
                               .stream()
-                              .map(recipe->RecipeListResponseDTO.of(recipe, true))
+                              .map(recipe-> {
+                                  String thumbnailKey = recipe.getThumbnailImageUrl();
+                                  String thumbnailUrl = null;
+                                  if(thumbnailKey != null && !thumbnailKey.isEmpty()){
+                                      thumbnailUrl = s3Service.generateDownloadPresignedUrls(List.of(thumbnailKey))
+                                                              .get(0)
+                                                              .get("downloadUrl");
+                                  }
+
+                                  // 서명된 url로 교체하여 dto 변환
+                                  Recipe updateRecipe = recipe.toBuilder()
+                                                              .thumbnailImageUrl(thumbnailUrl)
+                                                              .build();
+                                  return RecipeListResponseDTO.of(updateRecipe, true);
+                              })
                               .toList();
     }
 }
