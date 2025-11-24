@@ -18,6 +18,7 @@ import com.cookrep_spring.app.security.CustomUserDetail;
 import com.cookrep_spring.app.services.scrap.ScrapService;
 import com.cookrep_spring.app.utils.S3Service;
 import com.cookrep_spring.app.dto.recipe.request.RecipePostRequest;
+import com.github.benmanes.caffeine.cache.Cache;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,6 +42,9 @@ public class RecipeService {
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final ScrapService scrapService;
     private final RecipeLikeRepository recipeLikeRepository;
+
+    // Caffeine 캐시 주입
+    private final Cache<String, Boolean> viewCache;
 
     // =============== upload =================
     @Transactional
@@ -227,38 +231,6 @@ public class RecipeService {
                 .build();
     }
 
-    // =============== List All =================
-    @Transactional(readOnly = true)
-    public List<RecipeListResponse> getRecipeList(String userId){
-        // 1. 유저 검증
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // 2. 해당 유저가 작성한 레시피 목록 조회
-        List<Recipe> recipes = recipeRepository.findByUser(user);
-
-        // 3. 썸네일 URL 변환 및 Presigned URL 생성
-        return recipes.stream()
-                .map(recipe -> {
-                    String thumbnailKey = recipe.getThumbnailImageUrl();
-                    String thumbnailUrl = null;
-                    if(thumbnailKey != null && !thumbnailKey.isEmpty()){
-                        thumbnailUrl = s3Service.generateDownloadPresignedUrls(List.of(thumbnailKey))
-                                .get(0)
-                                .get("downloadUrl");
-                    }
-
-                    // 서명된 url로 교체하여 dto 변환
-                    Recipe updateRecipe = recipe.toBuilder()
-                            .thumbnailImageUrl(thumbnailUrl)
-                            .build();
-
-                    return RecipeListResponse.from(updateRecipe);
-                })
-                .toList();
-
-
-    }
 
     /**
      * 냉장고 재료 기반 레시피 추천
@@ -300,10 +272,15 @@ public class RecipeService {
     }
 
     // =============== Detail =================
-    @Transactional(readOnly = true)
-    public RecipeDetailResponse getRecipeDetail(String recipeId, @AuthenticationPrincipal CustomUserDetail userDetails) {
+    @Transactional(readOnly = true) // 조회만 하므로 readOnly
+    public RecipeDetailResponse getRecipeDetail(String recipeId,
+                                                CustomUserDetail userDetails) {
+
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not Found"));
+
+        // 조회수는 DB에서 직접 가져오기
+        int currentViews = recipeRepository.findViewsById(recipeId);
 
         // 썸네일 Presigned URL
         String thumbnailKey = recipe.getThumbnailImageUrl();
@@ -363,11 +340,55 @@ public class RecipeService {
                         currentUserId // isOwner 비교용
                 ).toBuilder()
                 .liked(liked) // 여기 추가
+                .views(currentViews)
                 .build();
     }
 
+    /**
+     * 조회수 증가: viewer(로그인 userId 또는 sessionId) 기반으로 캐시 체크 후 DB 증가
+     * controller에서 viewer를 결정(로그인 우선, 아니면 session cookie 발급)해서 넘겨줄 것
+     */
+    @Transactional
+    public RecipeViewsResponseDTO getRecipeWithViews(String recipeId, CustomUserDetail userDetails, String viewer) {
 
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new RuntimeException("Recipe not Found"));
 
+        String ownerId = recipe.getUser() != null ? recipe.getUser().getUserId() : null;
+        String loginUserId = (userDetails != null) ? userDetails.getUserId() : null;
+
+        // 작성자 본인 접근이면 증가하지 않음
+        if (loginUserId != null && Objects.equals(ownerId, loginUserId)) {
+            int current = recipeRepository.findViewsById(recipeId);
+            return RecipeViewsResponseDTO.of(current);
+        }
+
+        // viewer가 null이면(이상적으로는 controller에서 sessionId를 발급) 기존 방식 유지
+        if (viewer == null) {
+            recipeRepository.incrementViewsById(recipeId);
+            int updated = recipeRepository.findViewsById(recipeId);
+            return RecipeViewsResponseDTO.of(updated);
+        }
+
+        String key = recipeId + ":" + viewer;
+        // putIfAbsent 원자적 삽입: 이미 있으면 null이 아님 -> 중복으로 간주
+        Boolean prev = viewCache.asMap().putIfAbsent(key, Boolean.TRUE);
+        if (prev != null) {
+            int cur = recipeRepository.findViewsById(recipeId);
+            return RecipeViewsResponseDTO.of(cur);
+        }
+
+        try {
+            // 최초 뷰라면 DB 증가
+            recipeRepository.incrementViewsById(recipeId);
+            int updated = recipeRepository.findViewsById(recipeId);
+            return RecipeViewsResponseDTO.of(updated);
+        } catch (RuntimeException ex) {
+            // DB 실패 시 캐시 롤백
+            viewCache.invalidate(key);
+            throw ex;
+        }
+    }
 
 
     // =============== delete =================
@@ -405,30 +426,6 @@ public class RecipeService {
 
         return true;
     }
-
-
-    @Transactional
-    public Map<String, Integer> getRecipeWithViews(String recipeId, CustomUserDetail userDetails, boolean increment) {
-        Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("Recipe not Found"));
-
-        if (increment) {
-            String loginUserId = (userDetails != null) ? userDetails.getUserId() : null;
-
-            // 로그인하지 않았거나 작성자가 아니면 DB 레벨에서 원자적 증가
-            if (loginUserId == null || !recipe.getUser().getUserId().equals(loginUserId)) {
-                recipeRepository.incrementViewsById(recipeId);
-
-                // 최신 값 재조회
-                recipe = recipeRepository.findById(recipeId)
-                        .orElseThrow(() -> new RuntimeException("Recipe not Found"));
-            }
-        }
-
-        return Map.of("views", recipe.getViews());
-    }
-
-
 
 
 }
