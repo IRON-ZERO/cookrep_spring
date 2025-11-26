@@ -1,7 +1,12 @@
-
 server:  
-  port: 8080  
-spring:  
+  port: 8080
+api:
+  url:http://openapi.foodsafetykorea.go.kr/api/
+  key:  
+spring:
+  jwt:
+   access-secret:
+   refresh-secret:
   application:  
     name: cookrep_spring  
   datasource:  
